@@ -1,6 +1,6 @@
 import MemoriesHeader from "./MemoriesHeader";
 import MemoryCard from "./MemoryCard";
-import { memories } from "../../data/memories";
+import { memories } from "../../data/Memories.js"
 /**
  * Temporary/inline sample data — replace with a real content source
  * (CMS, JSON, API) when available. Declared at module scope so it's
