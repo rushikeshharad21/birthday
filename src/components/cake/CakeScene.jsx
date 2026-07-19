@@ -10,53 +10,26 @@ import {
   CAKE_STAND_RADIUS,
 } from "./cakeDimensions";
 
-// ---------------------------------------------------------------------------
-// Real cake geometry — no assumptions. CAKE_BASE_Y and CAKE_STAND_RADIUS
-// must exist in cakeDimensions.js; this file no longer guesses either.
-// Total height deliberately stops at the structural top surface, not any
-// decoration, so the camera/orbit target never depend on garnishes.
-// ---------------------------------------------------------------------------
 const CAKE_TOTAL_HEIGHT = CAKE_TOP_SURFACE_Y - CAKE_BASE_Y;
 
-// ---------------------------------------------------------------------------
-// Breakpoints — single source of truth for CSS sizing, rotate speed, and
-// DPR tier alike (see containerClassName below).
-// ---------------------------------------------------------------------------
 const BREAKPOINT_TABLET_PX = 768;
 const BREAKPOINT_DESKTOP_PX = 1024;
 const BREAKPOINT_LAPTOP_PX = 1280;
 
-// ---------------------------------------------------------------------------
-// Mathematical camera framing
-// ---------------------------------------------------------------------------
 const BASE_VERTICAL_FOV_DEG = 35;
-const TARGET_FILL_FRACTION = 0.62; // cake occupies ~62% of frame, leaving edge headroom
+const TARGET_FILL_FRACTION = 0.62;
 
-// Fixed cinematic viewing angles — the artistic 3/4 hero composition.
-// Stated directly rather than reverse-engineered from a position vector.
-const CAMERA_ELEVATION_DEG = 27;
+const CAMERA_ELEVATION_DEG = 62;
 const CAMERA_AZIMUTH_DEG = 35;
 const CAMERA_ELEVATION_ANGLE = THREE.MathUtils.degToRad(CAMERA_ELEVATION_DEG);
 const CAMERA_AZIMUTH_ANGLE = THREE.MathUtils.degToRad(CAMERA_AZIMUTH_DEG);
 
 const CAMERA_DISTANCE_SAFETY_MARGIN = 1.04;
 
-/**
- * distance = halfExtent / fillFraction / tan(fov / 2)
- * Direct inverse of the perspective relationship
- * visibleHalfExtent = distance * tan(fov / 2).
- */
 function solveDistanceForHalfExtent(halfExtent, fovRadians) {
   return halfExtent / TARGET_FILL_FRACTION / Math.tan(fovRadians / 2);
 }
 
-/**
- * horizontalFov = 2 * atan(tan(verticalFov / 2) * aspect) is the true
- * frustum relationship — not a linear fov*aspect scale, which has no
- * geometric basis. Distance is solved against both the cake's height
- * and its stand radius; whichever needs more distance wins, guaranteeing
- * no clipping on either axis at any aspect ratio.
- */
 function resolveCameraFraming(aspect) {
   const verticalFov = THREE.MathUtils.degToRad(BASE_VERTICAL_FOV_DEG);
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
@@ -84,17 +57,8 @@ function resolveCameraFraming(aspect) {
   return { position, fov: BASE_VERTICAL_FOV_DEG };
 }
 
-// ---------------------------------------------------------------------------
-// Orbit target — visual center of the cake BODY only. Independent of
-// cherry, swirl, or any future topping by construction: it only reads
-// CAKE_BASE_Y and CAKE_TOP_SURFACE_Y.
-// ---------------------------------------------------------------------------
 export const ORBIT_TARGET = [0, CAKE_BASE_Y + CAKE_TOTAL_HEIGHT / 2, 0];
 
-// ---------------------------------------------------------------------------
-// Controls — input ergonomics, tiered by breakpoint (not continuous math,
-// since rotate feel is a UX tuning concern, not a framing concern).
-// ---------------------------------------------------------------------------
 const ORBIT_DAMPING_FACTOR = 0.08;
 
 const ORBIT_ROTATE_SPEED = {
@@ -104,12 +68,9 @@ const ORBIT_ROTATE_SPEED = {
   desktop: 0.6,
 };
 
-const POLAR_ANGLE_MIN = Math.PI / 4;
+const POLAR_ANGLE_MIN = Math.PI / 6;
 const POLAR_ANGLE_MAX = Math.PI / 2.1;
 
-// ---------------------------------------------------------------------------
-// Lighting — unchanged, out of scope.
-// ---------------------------------------------------------------------------
 const LIGHT_COLOR_AMBIENT = "#fff1e0";
 const LIGHT_COLOR_KEY = "#ffddaa";
 const LIGHT_COLOR_FILL = "#bcd4ff";
@@ -127,16 +88,8 @@ const RIM_LIGHT_ANGLE = 0.5;
 const RIM_LIGHT_PENUMBRA = 0.8;
 const RIM_LIGHT_DISTANCE = 10;
 
-// ---------------------------------------------------------------------------
-// Shadow camera frustum — bounds from real stand radius. The margin below
-// is NOT a derived geometric quantity (there is no formula for shadow-map
-// edge bleed without a configured soft-shadow radius); it's a tuned
-// constant that exists to keep the hard-edged shadow map from clipping
-// the stand silhouette at its exact edge. Named for what it compensates,
-// not disguised as a derivation.
-// ---------------------------------------------------------------------------
 const SHADOW_MAP_SIZE = 2048;
-const SHADOW_EDGE_BLEED_MARGIN = 1.5; // tuned: shadow-map texel bleed at silhouette edges, not a geometric derivation
+const SHADOW_EDGE_BLEED_MARGIN = 1.5;
 const SHADOW_CAMERA_BOUNDS = CAKE_STAND_RADIUS + SHADOW_EDGE_BLEED_MARGIN;
 const SHADOW_CAMERA_NEAR = 0.5;
 
@@ -144,20 +97,12 @@ const KEY_LIGHT_DISTANCE_TO_ORIGIN = new THREE.Vector3(...KEY_LIGHT_POSITION).le
 const SHADOW_CAMERA_FAR = KEY_LIGHT_DISTANCE_TO_ORIGIN + SHADOW_EDGE_BLEED_MARGIN;
 const SHADOW_BIAS = -0.0005;
 
-// ---------------------------------------------------------------------------
-// Ground contact shadow — real stand radius, plus a falloff multiplier
-// (soft shadow needs to extend past the stand edge to read as grounded,
-// not clipped flush to the footprint).
-// ---------------------------------------------------------------------------
 const CONTACT_SHADOW_OPACITY = 0.55;
-const CONTACT_SHADOW_FALLOFF_MULTIPLIER = 2.2; // how far the soft shadow fades beyond the stand edge
+const CONTACT_SHADOW_FALLOFF_MULTIPLIER = 2.2;
 const CONTACT_SHADOW_SCALE = CAKE_STAND_RADIUS * CONTACT_SHADOW_FALLOFF_MULTIPLIER;
 const CONTACT_SHADOW_BLUR = 2.6;
 const CONTACT_SHADOW_FAR = 4;
 
-// ---------------------------------------------------------------------------
-// DPR — tiered by breakpoint for mobile thermal/battery headroom.
-// ---------------------------------------------------------------------------
 const DPR_RANGE_BY_BREAKPOINT = {
   mobile: [1, 1.5],
   tablet: [1, 1.75],
@@ -175,8 +120,6 @@ function resolveBreakpoint(width) {
   return "mobile";
 }
 
-/** Rounds aspect to 0.02 steps so resize churn doesn't recompute the
- * camera (and resync R3F's camera object) on every animation frame. */
 function roundAspectForMemo(aspect) {
   const STEP = 0.02;
   return Math.round(aspect / STEP) * STEP;
@@ -206,7 +149,7 @@ function useResponsiveViewport() {
 
         setViewport((prev) => {
           if (prev.breakpoint === nextBreakpoint && prev.aspect === nextAspect) {
-            return prev; // same reference — skips the re-render entirely
+            return prev;
           }
           return { breakpoint: nextBreakpoint, aspect: nextAspect };
         });
