@@ -11,6 +11,89 @@ import {
   MeshStandardMaterial,
 } from "three";
 
+import {
+  BOTTOM_LAYER_RADIUS,
+  BOTTOM_LAYER_HEIGHT,
+  TOP_LAYER_RADIUS,
+  TOP_LAYER_HEIGHT,
+  CREAM_RING_RADIUS,
+  CREAM_RING_HEIGHT,
+
+  STAND_RADIUS,
+  STAND_HEIGHT,
+
+  BASE_HEIGHT_FRACTION,
+  LOWER_COLLAR_HEIGHT_FRACTION,
+  UPPER_COLLAR_HEIGHT_FRACTION,
+  PLATE_HEIGHT_FRACTION,
+
+  BASE_TOP_Y,
+  LOWER_COLLAR_TOP_Y,
+  COLUMN_TOP_Y,
+  UPPER_COLLAR_TOP_Y,
+  PLATE_TOP_Y,
+
+  BASE_FOOT_RADIUS,
+  BASE_BULGE_RADIUS,
+  BASE_NECK_RADIUS,
+  LOWER_COLLAR_RADIUS,
+  COLUMN_WAIST_RADIUS,
+  UPPER_COLLAR_RADIUS,
+  PLATE_UNDER_RADIUS,
+  PLATE_EDGE_RADIUS,
+  PLATE_CHAMFER_RADIUS,
+
+  BASE_BULGE_HEIGHT_RATIO,
+  COLLAR_TRANSITION_RATIO,
+  PLATE_WALL_HEIGHT_RATIO,
+
+  STAND_RADIAL_SEGMENTS,
+
+  ICING_RADIUS,
+  ICING_FLAT_CENTER_RADIUS,
+  ICING_CAP_HEIGHT,
+  ICING_EDGE_LIFT_HEIGHT,
+  ICING_SKIRT_DROP_HEIGHT,
+  ICING_EDGE_ROUND_MID_RATIO,
+  ICING_RADIAL_SEGMENTS,
+
+  FROSTING_PATH_RADIUS,
+  FROSTING_TUBE_RADIUS,
+  FROSTING_FLATTEN_RATIO,
+  FROSTING_EMBED_RATIO,
+  FROSTING_WOBBLE_PRIMARY_FREQUENCY,
+  FROSTING_WOBBLE_SECONDARY_FREQUENCY,
+  FROSTING_WOBBLE_PRIMARY_AMPLITUDE,
+  FROSTING_WOBBLE_SECONDARY_AMPLITUDE,
+  FROSTING_TUBULAR_SEGMENTS,
+  FROSTING_RADIAL_SEGMENTS,
+
+  DRIP_COUNT,
+  DRIP_ANGLE_STEP,
+  DRIP_RADIUS,
+  DRIP_MIN_LENGTH_RATIO,
+  DRIP_MAX_LENGTH_RATIO,
+  DRIP_LENGTH_FREQUENCY,
+  DRIP_ORIGIN_RADIUS,
+
+  BOTTOM_LAYER_Y,
+  CREAM_RING_Y,
+  TOP_LAYER_Y,
+  TOP_SPONGE_SURFACE_Y,
+  FROSTING_Y_RESOLVED,
+  DRIP_ORIGIN_Y,
+
+  PEARL_RADIUS,
+  TOP_BORDER_RADIUS,
+  TOP_BORDER_Y,
+  TOP_BORDER_PEARL_COUNT,
+  BOTTOM_BORDER_RADIUS,
+  BOTTOM_BORDER_Y,
+  BOTTOM_BORDER_PEARL_COUNT,
+} from "./cakeDimensions";
+import CreamRosettes from "./CreamRosettes";
+import CenterCreamSwirl from "./CenterCreamSwirl";
+import CenterCherry from "./CenterCherry";
 // ---------------------------------------------------------------------------
 // 1. Shared geometry
 // ---------------------------------------------------------------------------
@@ -43,192 +126,7 @@ const standMaterial = new MeshStandardMaterial({
   metalness: 0.9,
 });
 
-// ---------------------------------------------------------------------------
-// 3. Dimension constants
-// ---------------------------------------------------------------------------
-const BOTTOM_LAYER_RADIUS = 1.6;
-const BOTTOM_LAYER_HEIGHT = 1.1;
 
-const TOP_LAYER_RADIUS = 1.05;
-const TOP_LAYER_HEIGHT = 0.85;
-
-const CREAM_RING_RADIUS = TOP_LAYER_RADIUS * 1.585;
-const CREAM_RING_HEIGHT = 0.12;
-
-const STAND_RADIUS = BOTTOM_LAYER_RADIUS * 1.25;
-const STAND_HEIGHT = 0.15;
-
-// ---------------------------------------------------------------------------
-// 3a. Stand silhouette — radius ratios (fractions of STAND_RADIUS)
-// ---------------------------------------------------------------------------
-const BASE_FOOT_RADIUS_RATIO = 0.9;
-const BASE_BULGE_RADIUS_RATIO = 1.0;
-const BASE_NECK_RADIUS_RATIO = 0.42;
-const LOWER_COLLAR_RADIUS_RATIO = 0.5;
-const COLUMN_WAIST_RADIUS_RATIO = 0.32;
-const UPPER_COLLAR_RADIUS_RATIO = 0.48;
-const PLATE_UNDER_RADIUS_RATIO = 0.44;
-const PLATE_EDGE_RADIUS_RATIO = 1.0;
-const PLATE_CHAMFER_RADIUS_RATIO = 0.92;
-
-const BASE_BULGE_HEIGHT_RATIO = 0.55;
-const COLLAR_TRANSITION_RATIO = 0.5;
-const PLATE_WALL_HEIGHT_RATIO = 0.45;
-
-// ---------------------------------------------------------------------------
-// 3b. Stand silhouette — height fractions of STAND_HEIGHT (sum to exactly 1)
-// ---------------------------------------------------------------------------
-const BASE_HEIGHT_FRACTION = 0.32;
-const LOWER_COLLAR_HEIGHT_FRACTION = 0.1;
-const UPPER_COLLAR_HEIGHT_FRACTION = 0.1;
-const PLATE_HEIGHT_FRACTION = 0.18;
-const COLUMN_HEIGHT_FRACTION =
-  1 -
-  BASE_HEIGHT_FRACTION -
-  LOWER_COLLAR_HEIGHT_FRACTION -
-  UPPER_COLLAR_HEIGHT_FRACTION -
-  PLATE_HEIGHT_FRACTION;
-
-const BASE_TOP_Y = STAND_HEIGHT * BASE_HEIGHT_FRACTION;
-const LOWER_COLLAR_TOP_Y = BASE_TOP_Y + STAND_HEIGHT * LOWER_COLLAR_HEIGHT_FRACTION;
-const COLUMN_TOP_Y = LOWER_COLLAR_TOP_Y + STAND_HEIGHT * COLUMN_HEIGHT_FRACTION;
-const UPPER_COLLAR_TOP_Y = COLUMN_TOP_Y + STAND_HEIGHT * UPPER_COLLAR_HEIGHT_FRACTION;
-const PLATE_TOP_Y = UPPER_COLLAR_TOP_Y + STAND_HEIGHT * PLATE_HEIGHT_FRACTION;
-
-const BASE_FOOT_RADIUS = STAND_RADIUS * BASE_FOOT_RADIUS_RATIO;
-const BASE_BULGE_RADIUS = STAND_RADIUS * BASE_BULGE_RADIUS_RATIO;
-const BASE_NECK_RADIUS = STAND_RADIUS * BASE_NECK_RADIUS_RATIO;
-const LOWER_COLLAR_RADIUS = STAND_RADIUS * LOWER_COLLAR_RADIUS_RATIO;
-const COLUMN_WAIST_RADIUS = STAND_RADIUS * COLUMN_WAIST_RADIUS_RATIO;
-const UPPER_COLLAR_RADIUS = STAND_RADIUS * UPPER_COLLAR_RADIUS_RATIO;
-const PLATE_UNDER_RADIUS = STAND_RADIUS * PLATE_UNDER_RADIUS_RATIO;
-const PLATE_EDGE_RADIUS = STAND_RADIUS * PLATE_EDGE_RADIUS_RATIO;
-const PLATE_CHAMFER_RADIUS = PLATE_EDGE_RADIUS * PLATE_CHAMFER_RADIUS_RATIO;
-
-const STAND_RADIAL_SEGMENTS = 64;
-
-// ---------------------------------------------------------------------------
-// 3c. Icing cap — radius ratios (fractions of TOP_LAYER_RADIUS / ICING_RADIUS)
-// ---------------------------------------------------------------------------
-const ICING_OVERHANG_RATIO = 1.08;
-const ICING_FLAT_CENTER_RADIUS_RATIO = 0.5;
-const ICING_EDGE_ROUND_MID_RATIO = 0.5;
-
-const ICING_CAP_HEIGHT_RATIO = 0.22;
-const ICING_EDGE_LIFT_RATIO = 0.35;
-const ICING_SKIRT_DROP_RATIO = 0.3;
-
-const ICING_RADIUS = TOP_LAYER_RADIUS * ICING_OVERHANG_RATIO;
-const ICING_FLAT_CENTER_RADIUS = ICING_RADIUS * ICING_FLAT_CENTER_RADIUS_RATIO;
-const ICING_CAP_HEIGHT = TOP_LAYER_HEIGHT * ICING_CAP_HEIGHT_RATIO;
-const ICING_EDGE_LIFT_HEIGHT = ICING_CAP_HEIGHT * ICING_EDGE_LIFT_RATIO;
-const ICING_SKIRT_DROP_HEIGHT = TOP_LAYER_HEIGHT * ICING_SKIRT_DROP_RATIO;
-
-const ICING_RADIAL_SEGMENTS = STAND_RADIAL_SEGMENTS;
-
-// ---------------------------------------------------------------------------
-// 3d. Frosting lip
-// ---------------------------------------------------------------------------
-const FROSTING_PATH_RADIUS_RATIO = 1.0;
-const FROSTING_PATH_RADIUS = ICING_RADIUS * FROSTING_PATH_RADIUS_RATIO;
-
-const FROSTING_TUBE_RADIUS_RATIO = 0.4;
-const FROSTING_TUBE_RADIUS = ICING_CAP_HEIGHT * FROSTING_TUBE_RADIUS_RATIO;
-
-const FROSTING_FLATTEN_RATIO = 0.55;
-
-const FROSTING_EMBED_RATIO = 0.4;
-
-const FROSTING_WOBBLE_PRIMARY_FREQUENCY = 5;
-const FROSTING_WOBBLE_SECONDARY_FREQUENCY = 11;
-const FROSTING_WOBBLE_PRIMARY_AMPLITUDE_RATIO = 0.16;
-const FROSTING_WOBBLE_SECONDARY_AMPLITUDE_RATIO = 0.08;
-const FROSTING_WOBBLE_PRIMARY_AMPLITUDE =
-  FROSTING_TUBE_RADIUS * FROSTING_WOBBLE_PRIMARY_AMPLITUDE_RATIO;
-const FROSTING_WOBBLE_SECONDARY_AMPLITUDE =
-  FROSTING_TUBE_RADIUS * FROSTING_WOBBLE_SECONDARY_AMPLITUDE_RATIO;
-
-const FROSTING_TUBULAR_SEGMENTS = 128;
-const FROSTING_RADIAL_SEGMENTS = ICING_RADIAL_SEGMENTS;
-
-// ---------------------------------------------------------------------------
-// 3e. Cake drips
-// ---------------------------------------------------------------------------
-const DRIP_COUNT = 16;
-const DRIP_ANGLE_STEP = (Math.PI * 2) / DRIP_COUNT;
-
-const DRIP_RADIUS_RATIO = 0.6;
-const DRIP_RADIUS = FROSTING_TUBE_RADIUS * DRIP_RADIUS_RATIO;
-
-const DRIP_MIN_LENGTH_RATIO = 0.25;
-const DRIP_MAX_LENGTH_RATIO = 0.65;
-
-const DRIP_LENGTH_FREQUENCY = 2.4;
-
-// Drips originate at the sponge surface radius, tucked just under the icing
-// overhang so they read as emerging from beneath the icing skirt.
-const DRIP_ORIGIN_RADIUS = TOP_LAYER_RADIUS;
-
-const DRIP_BODY_RADIAL_SEGMENTS = 12;
-
-// ---------------------------------------------------------------------------
-// 4. Position constants (derived, stacked bottom-up from the stand)
-// ---------------------------------------------------------------------------
-const BOTTOM_LAYER_Y = STAND_HEIGHT + BOTTOM_LAYER_HEIGHT / 2;
-
-const CREAM_RING_Y =
-  STAND_HEIGHT + BOTTOM_LAYER_HEIGHT + CREAM_RING_HEIGHT / 2;
-
-const TOP_LAYER_Y =
-  STAND_HEIGHT + BOTTOM_LAYER_HEIGHT + CREAM_RING_HEIGHT + TOP_LAYER_HEIGHT / 2;
-
-const TOP_SPONGE_SURFACE_Y = TOP_LAYER_Y + TOP_LAYER_HEIGHT / 2;
-
-const FROSTING_Y_RESOLVED =
-  TOP_SPONGE_SURFACE_Y +
-  ICING_EDGE_LIFT_HEIGHT -
-  FROSTING_TUBE_RADIUS * FROSTING_EMBED_RATIO;
-
-const DRIP_ORIGIN_Y = TOP_SPONGE_SURFACE_Y - ICING_SKIRT_DROP_HEIGHT;
-
-// ---------------------------------------------------------------------------
-// 4a. Decorative piped border positions (depend on position constants above)
-// ---------------------------------------------------------------------------
-const PEARL_RADIUS_RATIO = 0.35;
-const PEARL_RADIUS = FROSTING_TUBE_RADIUS * PEARL_RADIUS_RATIO;
-
-const PEARL_OVERLAP_RATIO = 0.85;
-
-// --- Top border -------------------------------------------------------------
-const TOP_BORDER_RADIUS_RATIO = 1.02;
-const TOP_BORDER_RADIUS = ICING_RADIUS * TOP_BORDER_RADIUS_RATIO;
-
-const TOP_BORDER_LIFT_RATIO = 0.6;
-const TOP_BORDER_Y =
-  TOP_SPONGE_SURFACE_Y + ICING_CAP_HEIGHT + PEARL_RADIUS * TOP_BORDER_LIFT_RATIO;
-
-const TOP_BORDER_PEARL_COUNT = Math.ceil(
-  (Math.PI * 2 * TOP_BORDER_RADIUS) / (PEARL_RADIUS * 2 * PEARL_OVERLAP_RATIO)
-);
-
-// --- Bottom border ----------------------------------------------------------
-const BOTTOM_BORDER_RADIUS_RATIO = 1.01;
-const BOTTOM_BORDER_RADIUS = TOP_LAYER_RADIUS * BOTTOM_BORDER_RADIUS_RATIO;
-
-const BOTTOM_BORDER_DROP_RATIO = 0.4;
-const BOTTOM_BORDER_Y =
-  TOP_LAYER_Y - TOP_LAYER_HEIGHT / 2 - PEARL_RADIUS * BOTTOM_BORDER_DROP_RATIO;
-
-const BOTTOM_BORDER_PEARL_COUNT = Math.ceil(
-  (Math.PI * 2 * BOTTOM_BORDER_RADIUS) / (PEARL_RADIUS * 2 * PEARL_OVERLAP_RATIO)
-);
-
-// ---------------------------------------------------------------------------
-// 5. Public API for future siblings (Candle, Flame, Cherry, Sprinkles, ...)
-// ---------------------------------------------------------------------------
-export const CAKE_TOP_SURFACE_Y = TOP_SPONGE_SURFACE_Y + ICING_CAP_HEIGHT;
-export const CAKE_TOP_LAYER_RADIUS = TOP_LAYER_RADIUS;
-export const ICING_FLAT_CENTER_RADIUS_EXPORT = ICING_FLAT_CENTER_RADIUS;
 
 // ---------------------------------------------------------------------------
 // 6. Stand geometry
@@ -241,14 +139,20 @@ function buildStandProfile() {
     LOWER_COLLAR_TOP_Y + (COLUMN_TOP_Y - LOWER_COLLAR_TOP_Y) * 0.5;
   const upperCollarMidY =
     COLUMN_TOP_Y + (UPPER_COLLAR_TOP_Y - COLUMN_TOP_Y) * COLLAR_TRANSITION_RATIO;
-  const plateWallBottomY =
-    UPPER_COLLAR_TOP_Y +
-    (PLATE_TOP_Y - UPPER_COLLAR_TOP_Y) *
-      (1 - PLATE_WALL_HEIGHT_RATIO) *
-      0.5;
-  const plateWallTopY =
-    PLATE_TOP_Y -
-    (PLATE_TOP_Y - UPPER_COLLAR_TOP_Y) * PLATE_WALL_HEIGHT_RATIO * 0.5;
+
+  // FIX: both offsets are now the same "margin" quantity —
+  // (1 - PLATE_WALL_HEIGHT_RATIO) * 0.5 * span — applied from the bottom and
+  // mirrored from the top. Previously the top offset used
+  // PLATE_WALL_HEIGHT_RATIO * 0.5 * span instead of (1 - ratio) * 0.5 * span,
+  // which made the two terms cancel algebraically: the resulting wall height
+  // was always exactly 0.5 * span regardless of what PLATE_WALL_HEIGHT_RATIO
+  // was set to. This version makes the wall height actually equal
+  // PLATE_WALL_HEIGHT_RATIO * span, centered in the plate zone, as the name
+  // promises.
+  const plateSpan = PLATE_TOP_Y - UPPER_COLLAR_TOP_Y;
+  const plateWallMargin = plateSpan * (1 - PLATE_WALL_HEIGHT_RATIO) * 0.5;
+  const plateWallBottomY = UPPER_COLLAR_TOP_Y + plateWallMargin;
+  const plateWallTopY = PLATE_TOP_Y - plateWallMargin;
 
   return [
     new Vector2(0, 0),
@@ -575,6 +479,9 @@ export default memo(function CakeModel() {
       <FrostingLip />
       <CakeDrips />
       <CakeBorders />
+      <CreamRosettes />
+      <CenterCreamSwirl />
+        <CenterCherry />
     </group>
   );
 });

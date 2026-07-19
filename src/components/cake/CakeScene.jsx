@@ -3,46 +3,112 @@ import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, ContactShadows } from "@react-three/drei";
 import CakeModel from "./CakeModel";
+import {
+  CAKE_TOP_SURFACE_Y,
+  CAKE_TOP_LAYER_RADIUS,
+  CAKE_BASE_Y,
+  CAKE_STAND_RADIUS,
+} from "./cakeDimensions";
 
 // ---------------------------------------------------------------------------
-// Breakpoints — mirrored from Tailwind's default `md` / `lg` so the camera
-// logic and the CSS height classes below stay in sync.
+// Real cake geometry — no assumptions. CAKE_BASE_Y and CAKE_STAND_RADIUS
+// must exist in cakeDimensions.js; this file no longer guesses either.
+// Total height deliberately stops at the structural top surface, not any
+// decoration, so the camera/orbit target never depend on garnishes.
 // ---------------------------------------------------------------------------
-const BREAKPOINT_TABLET_PX = 768; // Tailwind `md`
-const BREAKPOINT_DESKTOP_PX = 1024; // Tailwind `lg`
+const CAKE_TOTAL_HEIGHT = CAKE_TOP_SURFACE_Y - CAKE_BASE_Y;
 
 // ---------------------------------------------------------------------------
-// Camera — one config per breakpoint. Mobile/tablet sit further back and use
-// a wider FOV so the full cake stays in frame on narrow, tall viewports
-// instead of being cropped by the shorter canvas height.
+// Breakpoints — single source of truth for CSS sizing, rotate speed, and
+// DPR tier alike (see containerClassName below).
 // ---------------------------------------------------------------------------
-const CAMERA_CONFIG = {
-  mobile: { position: [4.4, 2.8, 6.2], fov: 45 },
-  tablet: { position: [3.8, 2.6, 5.4], fov: 40 },
-  desktop: { position: [3.2, 2.4, 4.6], fov: 35 },
-};
-
-// Target the cake sits slightly above the floor; orbit pivot matches that height.
-const ORBIT_TARGET = [0, 0.6, 0];
+const BREAKPOINT_TABLET_PX = 768;
+const BREAKPOINT_DESKTOP_PX = 1024;
+const BREAKPOINT_LAPTOP_PX = 1280;
 
 // ---------------------------------------------------------------------------
-// Controls — rotate-only orbit, tuned for smooth touch drag on mobile.
+// Mathematical camera framing
 // ---------------------------------------------------------------------------
-const ORBIT_DAMPING_FACTOR = 0.08;
-const ORBIT_ROTATE_SPEED = 0.6; // slightly slower than default: prevents overshoot on touch flicks
+const BASE_VERTICAL_FOV_DEG = 35;
+const TARGET_FILL_FRACTION = 0.62; // cake occupies ~62% of frame, leaving edge headroom
+
+// Fixed cinematic viewing angles — the artistic 3/4 hero composition.
+// Stated directly rather than reverse-engineered from a position vector.
+const CAMERA_ELEVATION_DEG = 27;
+const CAMERA_AZIMUTH_DEG = 35;
+const CAMERA_ELEVATION_ANGLE = THREE.MathUtils.degToRad(CAMERA_ELEVATION_DEG);
+const CAMERA_AZIMUTH_ANGLE = THREE.MathUtils.degToRad(CAMERA_AZIMUTH_DEG);
+
+const CAMERA_DISTANCE_SAFETY_MARGIN = 1.04;
 
 /**
- * Vertical rotation limits (radians) for OrbitControls.
- * Prevents the camera from dipping below the floor plane or
- * flying up to an unflattering top-down angle.
- * - MIN: slightly above straight-down-the-barrel (keeps a hero angle)
- * - MAX: just short of horizon level (keeps the floor/shadow in frame)
+ * distance = halfExtent / fillFraction / tan(fov / 2)
+ * Direct inverse of the perspective relationship
+ * visibleHalfExtent = distance * tan(fov / 2).
  */
-const POLAR_ANGLE_MIN = Math.PI / 4; // 45°
-const POLAR_ANGLE_MAX = Math.PI / 2.1; // ~85.7°, just above the ground plane
+function solveDistanceForHalfExtent(halfExtent, fovRadians) {
+  return halfExtent / TARGET_FILL_FRACTION / Math.tan(fovRadians / 2);
+}
+
+/**
+ * horizontalFov = 2 * atan(tan(verticalFov / 2) * aspect) is the true
+ * frustum relationship — not a linear fov*aspect scale, which has no
+ * geometric basis. Distance is solved against both the cake's height
+ * and its stand radius; whichever needs more distance wins, guaranteeing
+ * no clipping on either axis at any aspect ratio.
+ */
+function resolveCameraFraming(aspect) {
+  const verticalFov = THREE.MathUtils.degToRad(BASE_VERTICAL_FOV_DEG);
+  const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
+
+  const distanceForHeight = solveDistanceForHalfExtent(
+    CAKE_TOTAL_HEIGHT / 2,
+    verticalFov
+  );
+  const distanceForWidth = solveDistanceForHalfExtent(
+    CAKE_STAND_RADIUS,
+    horizontalFov
+  );
+
+  const distance =
+    Math.max(distanceForHeight, distanceForWidth) * CAMERA_DISTANCE_SAFETY_MARGIN;
+
+  const targetY = ORBIT_TARGET[1];
+  const horizontalRadius = distance * Math.cos(CAMERA_ELEVATION_ANGLE);
+  const position = [
+    horizontalRadius * Math.sin(CAMERA_AZIMUTH_ANGLE),
+    targetY + distance * Math.sin(CAMERA_ELEVATION_ANGLE),
+    horizontalRadius * Math.cos(CAMERA_AZIMUTH_ANGLE),
+  ];
+
+  return { position, fov: BASE_VERTICAL_FOV_DEG };
+}
 
 // ---------------------------------------------------------------------------
-// Lighting — warm three-point rig + rim light, tuned for a cinematic mood.
+// Orbit target — visual center of the cake BODY only. Independent of
+// cherry, swirl, or any future topping by construction: it only reads
+// CAKE_BASE_Y and CAKE_TOP_SURFACE_Y.
+// ---------------------------------------------------------------------------
+export const ORBIT_TARGET = [0, CAKE_BASE_Y + CAKE_TOTAL_HEIGHT / 2, 0];
+
+// ---------------------------------------------------------------------------
+// Controls — input ergonomics, tiered by breakpoint (not continuous math,
+// since rotate feel is a UX tuning concern, not a framing concern).
+// ---------------------------------------------------------------------------
+const ORBIT_DAMPING_FACTOR = 0.08;
+
+const ORBIT_ROTATE_SPEED = {
+  mobile: 0.45,
+  tablet: 0.5,
+  laptop: 0.6,
+  desktop: 0.6,
+};
+
+const POLAR_ANGLE_MIN = Math.PI / 4;
+const POLAR_ANGLE_MAX = Math.PI / 2.1;
+
+// ---------------------------------------------------------------------------
+// Lighting — unchanged, out of scope.
 // ---------------------------------------------------------------------------
 const LIGHT_COLOR_AMBIENT = "#fff1e0";
 const LIGHT_COLOR_KEY = "#ffddaa";
@@ -61,46 +127,71 @@ const RIM_LIGHT_ANGLE = 0.5;
 const RIM_LIGHT_PENUMBRA = 0.8;
 const RIM_LIGHT_DISTANCE = 10;
 
-// Key-light shadow frustum — sized to just cover the cake + contact shadow.
+// ---------------------------------------------------------------------------
+// Shadow camera frustum — bounds from real stand radius. The margin below
+// is NOT a derived geometric quantity (there is no formula for shadow-map
+// edge bleed without a configured soft-shadow radius); it's a tuned
+// constant that exists to keep the hard-edged shadow map from clipping
+// the stand silhouette at its exact edge. Named for what it compensates,
+// not disguised as a derivation.
+// ---------------------------------------------------------------------------
 const SHADOW_MAP_SIZE = 2048;
+const SHADOW_EDGE_BLEED_MARGIN = 1.5; // tuned: shadow-map texel bleed at silhouette edges, not a geometric derivation
+const SHADOW_CAMERA_BOUNDS = CAKE_STAND_RADIUS + SHADOW_EDGE_BLEED_MARGIN;
 const SHADOW_CAMERA_NEAR = 0.5;
-const SHADOW_CAMERA_FAR = 20;
-const SHADOW_CAMERA_BOUNDS = 5; // left/right/top/bottom, symmetric
-const SHADOW_BIAS = -0.0005; // avoids shadow acne on curved icing geometry
+
+const KEY_LIGHT_DISTANCE_TO_ORIGIN = new THREE.Vector3(...KEY_LIGHT_POSITION).length();
+const SHADOW_CAMERA_FAR = KEY_LIGHT_DISTANCE_TO_ORIGIN + SHADOW_EDGE_BLEED_MARGIN;
+const SHADOW_BIAS = -0.0005;
 
 // ---------------------------------------------------------------------------
-// Ground contact shadow (replaces a full floor mesh).
+// Ground contact shadow — real stand radius, plus a falloff multiplier
+// (soft shadow needs to extend past the stand edge to read as grounded,
+// not clipped flush to the footprint).
 // ---------------------------------------------------------------------------
 const CONTACT_SHADOW_OPACITY = 0.55;
-const CONTACT_SHADOW_SCALE = 8;
+const CONTACT_SHADOW_FALLOFF_MULTIPLIER = 2.2; // how far the soft shadow fades beyond the stand edge
+const CONTACT_SHADOW_SCALE = CAKE_STAND_RADIUS * CONTACT_SHADOW_FALLOFF_MULTIPLIER;
 const CONTACT_SHADOW_BLUR = 2.6;
 const CONTACT_SHADOW_FAR = 4;
 
 // ---------------------------------------------------------------------------
-// Renderer.
+// DPR — tiered by breakpoint for mobile thermal/battery headroom.
 // ---------------------------------------------------------------------------
-const DPR_RANGE = [1, 2]; // caps pixel ratio on high-DPI phones to protect frame rate
-const TONE_MAPPING_EXPOSURE = 1.1;
+const DPR_RANGE_BY_BREAKPOINT = {
+  mobile: [1, 1.5],
+  tablet: [1, 1.75],
+  laptop: [1, 2],
+  desktop: [1, 2],
+};
 
-// Scene background — kept identical to the wrapping div's Tailwind background
-// (neutral-950) so the WebGL clear color and the surrounding page never seam.
+const TONE_MAPPING_EXPOSURE = 1.1;
 const SCENE_BACKGROUND_COLOR = "#0a0a0a";
 
-/**
- * Resolves the active layout tier from viewport width, throttled to
- * animation frames so resize/orientation-change events on mid-range Android
- * devices don't trigger a re-render per pixel.
- */
 function resolveBreakpoint(width) {
-  if (width >= BREAKPOINT_DESKTOP_PX) return "desktop";
+  if (width >= BREAKPOINT_LAPTOP_PX) return "desktop";
+  if (width >= BREAKPOINT_DESKTOP_PX) return "laptop";
   if (width >= BREAKPOINT_TABLET_PX) return "tablet";
   return "mobile";
 }
 
-function useResponsiveBreakpoint() {
-  const [breakpoint, setBreakpoint] = useState(() =>
-    typeof window === "undefined" ? "desktop" : resolveBreakpoint(window.innerWidth)
-  );
+/** Rounds aspect to 0.02 steps so resize churn doesn't recompute the
+ * camera (and resync R3F's camera object) on every animation frame. */
+function roundAspectForMemo(aspect) {
+  const STEP = 0.02;
+  return Math.round(aspect / STEP) * STEP;
+}
+
+function useResponsiveViewport() {
+  const [viewport, setViewport] = useState(() => {
+    if (typeof window === "undefined") {
+      return { breakpoint: "desktop", aspect: 16 / 9 };
+    }
+    return {
+      breakpoint: resolveBreakpoint(window.innerWidth),
+      aspect: roundAspectForMemo(window.innerWidth / window.innerHeight),
+    };
+  });
 
   useEffect(() => {
     let frameId = null;
@@ -108,7 +199,18 @@ function useResponsiveBreakpoint() {
     const handleResize = () => {
       if (frameId !== null) return;
       frameId = requestAnimationFrame(() => {
-        setBreakpoint(resolveBreakpoint(window.innerWidth));
+        const nextBreakpoint = resolveBreakpoint(window.innerWidth);
+        const nextAspect = roundAspectForMemo(
+          window.innerWidth / window.innerHeight
+        );
+
+        setViewport((prev) => {
+          if (prev.breakpoint === nextBreakpoint && prev.aspect === nextAspect) {
+            return prev; // same reference — skips the re-render entirely
+          }
+          return { breakpoint: nextBreakpoint, aspect: nextAspect };
+        });
+
         frameId = null;
       });
     };
@@ -120,10 +222,9 @@ function useResponsiveBreakpoint() {
     };
   }, []);
 
-  return breakpoint;
+  return viewport;
 }
 
-/** Feature-detects WebGL before the Canvas ever mounts a renderer. */
 function isWebGLSupported() {
   if (typeof window === "undefined") return true;
   try {
@@ -137,7 +238,6 @@ function isWebGLSupported() {
   }
 }
 
-/** Backstop for renderer/context-loss errors thrown after Canvas has mounted. */
 class WebGLErrorBoundary extends Component {
   state = { hasError: false };
 
@@ -161,27 +261,20 @@ function SceneFallback() {
   );
 }
 
-/**
- * CakeScene
- *
- * Owns all Three.js scene infrastructure: renderer/canvas config, camera,
- * lighting rig, environment/reflections, and camera controls.
- *
- * Deliberately contains no cake geometry — that responsibility belongs
- * entirely to <CakeModel />, keeping this component a pure "stage" that
- * any future model can be dropped into.
- */
 export default function CakeScene() {
-  const breakpoint = useResponsiveBreakpoint();
+  const { breakpoint, aspect } = useResponsiveViewport();
   const [webglSupported] = useState(isWebGLSupported);
 
-  // Stable object identity per breakpoint — avoids re-triggering R3F's
-  // camera-prop-sync effect on every parent render.
-  const cameraSettings = useMemo(() => CAMERA_CONFIG[breakpoint], [breakpoint]);
+  const cameraSettings = useMemo(() => resolveCameraFraming(aspect), [aspect]);
+  const rotateSpeed = ORBIT_ROTATE_SPEED[breakpoint];
+  const dprRange = DPR_RANGE_BY_BREAKPOINT[breakpoint];
 
   const containerClassName =
-    "relative w-full h-[360px] sm:h-[420px] md:h-[480px] lg:h-[600px] " +
-    "overflow-hidden rounded-2xl bg-neutral-950";
+    "relative w-full overflow-hidden rounded-2xl bg-neutral-950 " +
+    "h-[clamp(320px,50vh,480px)] " +
+    `[@media(min-width:${BREAKPOINT_TABLET_PX}px)]:h-[clamp(360px,55vh,560px)] ` +
+    `[@media(min-width:${BREAKPOINT_DESKTOP_PX}px)]:h-[clamp(400px,60vh,640px)] ` +
+    `[@media(min-width:${BREAKPOINT_LAPTOP_PX}px)]:h-[clamp(440px,70vh,760px)]`;
 
   if (!webglSupported) {
     return (
@@ -196,30 +289,21 @@ export default function CakeScene() {
       <WebGLErrorBoundary fallback={<SceneFallback />}>
         <Canvas
           shadows
-          // Cap device pixel ratio to balance sharpness vs. GPU cost on high-DPI screens.
-          dpr={DPR_RANGE}
+          dpr={dprRange}
           camera={cameraSettings}
           gl={{
             antialias: true,
-            // ACES filmic tone mapping gives the warm, cinematic contrast a product
-            // render needs instead of the flat default linear output.
             toneMapping: THREE.ACESFilmicToneMapping,
             toneMappingExposure: TONE_MAPPING_EXPOSURE,
           }}
           onCreated={({ gl, scene }) => {
-            // Match the renderer clear color to the wrapping div's background
-            // so there's no visible seam between the DOM and the WebGL canvas.
             gl.setClearColor(SCENE_BACKGROUND_COLOR, 1);
             scene.background = new THREE.Color(SCENE_BACKGROUND_COLOR);
           }}
         >
           <Suspense fallback={null}>
-            {/* ---------- Lighting rig (three-point + rim) ---------- */}
-
-            {/* Ambient: soft base fill so shadows never crush to pure black. */}
             <ambientLight intensity={LIGHT_INTENSITY_AMBIENT} color={LIGHT_COLOR_AMBIENT} />
 
-            {/* Key light: warm, directional, casts the primary shadow. */}
             <directionalLight
               position={KEY_LIGHT_POSITION}
               intensity={LIGHT_INTENSITY_KEY}
@@ -236,14 +320,12 @@ export default function CakeScene() {
               shadow-bias={SHADOW_BIAS}
             />
 
-            {/* Fill light: cooler, low-intensity, opposite the key light to soften shadows. */}
             <directionalLight
               position={FILL_LIGHT_POSITION}
               intensity={LIGHT_INTENSITY_FILL}
               color={LIGHT_COLOR_FILL}
             />
 
-            {/* Rim light: grazing backlight that separates the cake from the dark background. */}
             <spotLight
               position={RIM_LIGHT_POSITION}
               intensity={LIGHT_INTENSITY_RIM}
@@ -253,14 +335,10 @@ export default function CakeScene() {
               distance={RIM_LIGHT_DISTANCE}
             />
 
-            {/* ---------- Environment ---------- */}
-            {/* Studio HDRI drives realistic reflections/highlights on icing and frosting. */}
             <Environment preset="studio" />
 
-            {/* ---------- Subject ---------- */}
             <CakeModel />
 
-            {/* Soft contact shadow grounds the cake without needing a full floor mesh. */}
             <ContactShadows
               position={[0, -0.001, 0]}
               opacity={CONTACT_SHADOW_OPACITY}
@@ -269,19 +347,16 @@ export default function CakeScene() {
               far={CONTACT_SHADOW_FAR}
             />
 
-            {/* ---------- Controls ---------- */}
             <OrbitControls
               target={ORBIT_TARGET}
               enableZoom={false}
               enablePan={false}
               enableDamping
               dampingFactor={ORBIT_DAMPING_FACTOR}
-              rotateSpeed={ORBIT_ROTATE_SPEED}
+              rotateSpeed={rotateSpeed}
               minPolarAngle={POLAR_ANGLE_MIN}
               maxPolarAngle={POLAR_ANGLE_MAX}
-              // Rotation-only: no zoom/pan means the composition set above is preserved.
               enableRotate
-              // Single-finger drag maps directly to rotate on touch devices.
               touches={{ ONE: THREE.TOUCH.ROTATE }}
             />
           </Suspense>
