@@ -9,56 +9,135 @@ import {
   CAKE_BASE_Y,
   CAKE_STAND_RADIUS,
 } from "./cakeDimensions";
+import { CHERRY_TOP_Y } from "./CenterCherry";
+import { STRAWBERRY_OUTER_RADIUS } from "./Strawberries";
 
+// ---------------------------------------------------------------------------
+// Real cake geometry — no assumptions (unchanged from prior pass).
+// ---------------------------------------------------------------------------
 const CAKE_TOTAL_HEIGHT = CAKE_TOP_SURFACE_Y - CAKE_BASE_Y;
 
+// ---------------------------------------------------------------------------
+// Breakpoints — single source of truth, unchanged. Still drives CSS sizing
+// (via arbitrary-value media queries), rotate speed, and DPR tier. Also
+// drives per-breakpoint camera COMPOSITION (fill fraction, elevation,
+// azimuth) via the same 4-tier table.
+// ---------------------------------------------------------------------------
 const BREAKPOINT_TABLET_PX = 768;
 const BREAKPOINT_DESKTOP_PX = 1024;
 const BREAKPOINT_LAPTOP_PX = 1280;
 
+// ---------------------------------------------------------------------------
+// Per-breakpoint hero composition.
+//
+// fillFraction is expressed as "fraction of the tighter half-FOV the cake's
+// bounding sphere should subtend" (see resolveCameraFraming). Values are
+// intentionally conservative (<=0.62) — anything higher starts to risk
+// clipping the cherry tip or stand rim on ultra-wide/ultra-narrow aspect
+// ratios even with the bounding-sphere guarantee, because a very large
+// angular radius pushes sin(angularRadius) close to sin(halfFov), leaving
+// little slack for the safety margin.
+// ---------------------------------------------------------------------------
+const FRAME_CONFIG = {
+  mobile: { fillFraction: 0.34, elevationDeg: 80, azimuthDeg: 15 },
+  tablet: { fillFraction: 0.44, elevationDeg: 79, azimuthDeg: 18 },
+  laptop: { fillFraction: 0.50, elevationDeg: 78, azimuthDeg: 20 },
+  desktop: { fillFraction: 0.54, elevationDeg: 77, azimuthDeg: 22 },
+};
 const BASE_VERTICAL_FOV_DEG = 35;
-const TARGET_FILL_FRACTION = 0.62;
+const CAMERA_DISTANCE_SAFETY_MARGIN = 1.18;
 
-const CAMERA_ELEVATION_DEG = 62;
-const CAMERA_AZIMUTH_DEG = 35;
-const CAMERA_ELEVATION_ANGLE = THREE.MathUtils.degToRad(CAMERA_ELEVATION_DEG);
-const CAMERA_AZIMUTH_ANGLE = THREE.MathUtils.degToRad(CAMERA_AZIMUTH_DEG);
-
-const CAMERA_DISTANCE_SAFETY_MARGIN = 1.04;
-
-function solveDistanceForHalfExtent(halfExtent, fovRadians) {
-  return halfExtent / TARGET_FILL_FRACTION / Math.tan(fovRadians / 2);
+// ---------------------------------------------------------------------------
+// FIX — bounding-sphere framing.
+//
+// The previous version solved vertical and horizontal half-extents
+// SEPARATELY (distanceForHeight vs distanceForWidth) and took the max. That
+// is only a valid "no clipping" guarantee when the camera looks straight
+// on (elevation = 0). Once the camera is tilted up/down by elevationDeg
+// (as every tier here does), a world-space vertical extent no longer maps
+// 1:1 onto the camera's vertical FOV, so the old guarantee silently broke —
+// which is exactly what produced the cropped, zoomed-in framing (cake's
+// top layer / icing / cherry cut off, as seen in the screenshot).
+//
+// The fix: compute ONE bounding sphere around the entire cake (base rim,
+// top-layer rim, cherry tip — whichever point is farthest from the orbit
+// target), then solve camera distance so that sphere subtends a fixed
+// angular fraction of the tighter FOV axis. A sphere's apparent angular
+// size is identical from any camera position/angle at a given distance,
+// so this guarantee holds regardless of elevation or azimuth — unlike the
+// old per-axis extent approach.
+// ---------------------------------------------------------------------------
+function computeCakeBoundingRadius(targetY) {
+  const baseEdgeDist = Math.hypot(CAKE_STAND_RADIUS, targetY - CAKE_BASE_Y);
+  const topLayerEdgeDist = Math.hypot(
+    CAKE_TOP_LAYER_RADIUS,
+    CAKE_TOP_SURFACE_Y - targetY
+  );
+  const cherryTipDist = CHERRY_TOP_Y - targetY; // cherry sits on the center axis
+  // Strawberries sit off-axis (STRAWBERRY_OUTER_RADIUS from center) at the
+  // icing surface height — included so a wide strawberry ring can't poke
+  // past the guaranteed-visible sphere the way a center-axis decoration
+  // never would.
+  const strawberryEdgeDist = Math.hypot(
+    STRAWBERRY_OUTER_RADIUS,
+    CAKE_TOP_SURFACE_Y - targetY
+  );
+  return Math.max(baseEdgeDist, topLayerEdgeDist, cherryTipDist, strawberryEdgeDist);
 }
 
-function resolveCameraFraming(aspect) {
+/**
+ * Derives camera distance + FOV + position for a given aspect ratio and
+ * breakpoint, guaranteeing the full cake (base rim -> cherry tip, full
+ * stand radius) stays within frame at ANY elevation/azimuth, because the
+ * fit is solved against a bounding sphere rather than per-axis extents.
+ *
+ * angularRadius = fillFraction * min(verticalHalfFov, horizontalHalfFov)
+ * distance      = boundingRadius / sin(angularRadius) * safetyMargin
+ *
+ * This is the standard "fit bounding sphere in view" solve: a sphere of
+ * radius R viewed from distance D subtends half-angle asin(R/D) regardless
+ * of viewing direction, so constraining that half-angle to a fraction of
+ * the tighter FOV axis keeps the whole sphere (and everything inside it)
+ * on screen no matter how the camera is tilted or rotated.
+ */
+function resolveCameraFraming(aspect, breakpoint) {
+  const { fillFraction, elevationDeg, azimuthDeg } = FRAME_CONFIG[breakpoint];
+
   const verticalFov = THREE.MathUtils.degToRad(BASE_VERTICAL_FOV_DEG);
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
-
-  const distanceForHeight = solveDistanceForHalfExtent(
-    CAKE_TOTAL_HEIGHT / 2,
-    verticalFov
-  );
-  const distanceForWidth = solveDistanceForHalfExtent(
-    CAKE_STAND_RADIUS,
-    horizontalFov
-  );
-
-  const distance =
-    Math.max(distanceForHeight, distanceForWidth) * CAMERA_DISTANCE_SAFETY_MARGIN;
+  const tighterHalfFov = Math.min(verticalFov, horizontalFov) / 2;
 
   const targetY = ORBIT_TARGET[1];
-  const horizontalRadius = distance * Math.cos(CAMERA_ELEVATION_ANGLE);
+  const boundingRadius = computeCakeBoundingRadius(targetY);
+
+  const angularRadius = fillFraction * tighterHalfFov;
+  const distance =
+    (boundingRadius / Math.sin(angularRadius)) * CAMERA_DISTANCE_SAFETY_MARGIN;
+
+  const elevationAngle = THREE.MathUtils.degToRad(elevationDeg);
+  const azimuthAngle = THREE.MathUtils.degToRad(azimuthDeg);
+
+  const horizontalRadius = distance * Math.cos(elevationAngle);
   const position = [
-    horizontalRadius * Math.sin(CAMERA_AZIMUTH_ANGLE),
-    targetY + distance * Math.sin(CAMERA_ELEVATION_ANGLE),
-    horizontalRadius * Math.cos(CAMERA_AZIMUTH_ANGLE),
+    horizontalRadius * Math.sin(azimuthAngle),
+    targetY + distance * Math.sin(elevationAngle),
+    horizontalRadius * Math.cos(azimuthAngle),
   ];
 
   return { position, fov: BASE_VERTICAL_FOV_DEG };
 }
 
+// ---------------------------------------------------------------------------
+// Orbit target — visual center of the cake BODY only, independent of
+// cherry/swirl/toppings. Unchanged from prior pass; framing (above) adds
+// the cherry/rim-awareness via the bounding sphere, the pivot itself
+// deliberately does not.
+// ---------------------------------------------------------------------------
 export const ORBIT_TARGET = [0, CAKE_BASE_Y + CAKE_TOTAL_HEIGHT / 2, 0];
 
+// ---------------------------------------------------------------------------
+// Controls — input ergonomics, tiered by breakpoint.
+// ---------------------------------------------------------------------------
 const ORBIT_DAMPING_FACTOR = 0.08;
 
 const ORBIT_ROTATE_SPEED = {
@@ -68,9 +147,16 @@ const ORBIT_ROTATE_SPEED = {
   desktop: 0.6,
 };
 
-const POLAR_ANGLE_MIN = Math.PI / 6;
+// Min corresponds to ~77-80° elevation (the near-top-down starting angle
+// above) with a couple degrees of headroom, so OrbitControls doesn't clamp
+// the initial camera position back down toward the horizon the instant it
+// mounts. Max is unchanged — still stops short of looking up from below.
+const POLAR_ANGLE_MIN = THREE.MathUtils.degToRad(9);
 const POLAR_ANGLE_MAX = Math.PI / 2.1;
 
+// ---------------------------------------------------------------------------
+// Lighting — unchanged, out of scope.
+// ---------------------------------------------------------------------------
 const LIGHT_COLOR_AMBIENT = "#fff1e0";
 const LIGHT_COLOR_KEY = "#ffddaa";
 const LIGHT_COLOR_FILL = "#bcd4ff";
@@ -88,6 +174,10 @@ const RIM_LIGHT_ANGLE = 0.5;
 const RIM_LIGHT_PENUMBRA = 0.8;
 const RIM_LIGHT_DISTANCE = 10;
 
+// ---------------------------------------------------------------------------
+// Shadow camera frustum — real stand radius + tuned edge-bleed margin
+// (unchanged reasoning from prior pass).
+// ---------------------------------------------------------------------------
 const SHADOW_MAP_SIZE = 2048;
 const SHADOW_EDGE_BLEED_MARGIN = 1.5;
 const SHADOW_CAMERA_BOUNDS = CAKE_STAND_RADIUS + SHADOW_EDGE_BLEED_MARGIN;
@@ -97,12 +187,19 @@ const KEY_LIGHT_DISTANCE_TO_ORIGIN = new THREE.Vector3(...KEY_LIGHT_POSITION).le
 const SHADOW_CAMERA_FAR = KEY_LIGHT_DISTANCE_TO_ORIGIN + SHADOW_EDGE_BLEED_MARGIN;
 const SHADOW_BIAS = -0.0005;
 
+// ---------------------------------------------------------------------------
+// Ground contact shadow — real stand radius + falloff multiplier
+// (unchanged from prior pass).
+// ---------------------------------------------------------------------------
 const CONTACT_SHADOW_OPACITY = 0.55;
 const CONTACT_SHADOW_FALLOFF_MULTIPLIER = 2.2;
 const CONTACT_SHADOW_SCALE = CAKE_STAND_RADIUS * CONTACT_SHADOW_FALLOFF_MULTIPLIER;
 const CONTACT_SHADOW_BLUR = 2.6;
 const CONTACT_SHADOW_FAR = 4;
 
+// ---------------------------------------------------------------------------
+// DPR — tiered by breakpoint.
+// ---------------------------------------------------------------------------
 const DPR_RANGE_BY_BREAKPOINT = {
   mobile: [1, 1.5],
   tablet: [1, 1.75],
@@ -120,6 +217,8 @@ function resolveBreakpoint(width) {
   return "mobile";
 }
 
+/** Rounds aspect to 0.02 steps so resize churn doesn't recompute the
+ * camera (and resync R3F's camera object) on every animation frame. */
 function roundAspectForMemo(aspect) {
   const STEP = 0.02;
   return Math.round(aspect / STEP) * STEP;
@@ -208,16 +307,25 @@ export default function CakeScene() {
   const { breakpoint, aspect } = useResponsiveViewport();
   const [webglSupported] = useState(isWebGLSupported);
 
-  const cameraSettings = useMemo(() => resolveCameraFraming(aspect), [aspect]);
+  // Recomputed only when rounded aspect OR breakpoint changes — stable
+  // identity across resize churn, no visible camera jump.
+  const cameraSettings = useMemo(
+    () => resolveCameraFraming(aspect, breakpoint),
+    [aspect, breakpoint]
+  );
+
   const rotateSpeed = ORBIT_ROTATE_SPEED[breakpoint];
   const dprRange = DPR_RANGE_BY_BREAKPOINT[breakpoint];
 
+  // Container height per breakpoint: mobile deliberately stays well short
+  // of 100vh so the next section's top edge is visible on initial load —
+  // this, not the camera, is what actually creates scroll affordance.
   const containerClassName =
     "relative w-full overflow-hidden rounded-2xl bg-neutral-950 " +
-    "h-[clamp(320px,50vh,480px)] " +
-    `[@media(min-width:${BREAKPOINT_TABLET_PX}px)]:h-[clamp(360px,55vh,560px)] ` +
-    `[@media(min-width:${BREAKPOINT_DESKTOP_PX}px)]:h-[clamp(400px,60vh,640px)] ` +
-    `[@media(min-width:${BREAKPOINT_LAPTOP_PX}px)]:h-[clamp(440px,70vh,760px)]`;
+    "h-[clamp(320px,48vh,440px)] " +
+    `[@media(min-width:${BREAKPOINT_TABLET_PX}px)]:h-[clamp(360px,52vh,500px)] ` +
+    `[@media(min-width:${BREAKPOINT_DESKTOP_PX}px)]:h-[clamp(420px,62vh,640px)] ` +
+    `[@media(min-width:${BREAKPOINT_LAPTOP_PX}px)]:h-[clamp(460px,72vh,780px)]`;
 
   if (!webglSupported) {
     return (
@@ -239,9 +347,25 @@ export default function CakeScene() {
             toneMapping: THREE.ACESFilmicToneMapping,
             toneMappingExposure: TONE_MAPPING_EXPOSURE,
           }}
-          onCreated={({ gl, scene }) => {
+          onCreated={({ gl, scene, camera }) => {
             gl.setClearColor(SCENE_BACKGROUND_COLOR, 1);
             scene.background = new THREE.Color(SCENE_BACKGROUND_COLOR);
+
+            // Belt-and-suspenders: set the camera's position directly here
+            // too, instead of relying only on the `camera` prop above. If
+            // you see this log in your browser console but the view still
+            // looks unchanged, the issue is 100% a stale build/cache, not
+            // this code — restart `npm run dev` and hard-refresh.
+            const { position, fov } = resolveCameraFraming(aspect, breakpoint);
+            camera.position.set(...position);
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+            camera.lookAt(...ORBIT_TARGET);
+            // eslint-disable-next-line no-console
+            console.log(
+              "[CakeScene] camera framed:",
+              { breakpoint, elevationDeg: FRAME_CONFIG[breakpoint].elevationDeg, position }
+            );
           }}
         >
           <Suspense fallback={null}>

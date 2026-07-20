@@ -4,8 +4,8 @@ export const BOTTOM_LAYER_HEIGHT = 1.1;
 export const TOP_LAYER_RADIUS = 1.05;
 export const TOP_LAYER_HEIGHT = 0.85;
 
-export const CREAM_RING_RADIUS = TOP_LAYER_RADIUS * 1.585;
-export const CREAM_RING_HEIGHT = 0.12;
+export const CREAM_RING_RADIUS = BOTTOM_LAYER_RADIUS * 0.97; // top tier पेक्षा मोठी, पण bottom tier च्या आत
+export const CREAM_RING_HEIGHT = 0.25;
 
 export const STAND_RADIUS = BOTTOM_LAYER_RADIUS * 1.25;
 export const STAND_HEIGHT = 0.15;
@@ -94,7 +94,7 @@ export const FROSTING_RADIAL_SEGMENTS = ICING_RADIAL_SEGMENTS;
 export const DRIP_COUNT = 16;
 export const DRIP_ANGLE_STEP = (Math.PI * 2) / DRIP_COUNT;
 
-export const DRIP_RADIUS_RATIO = 0.6;
+export const DRIP_RADIUS_RATIO = 1.4;
 export const DRIP_RADIUS = FROSTING_TUBE_RADIUS * DRIP_RADIUS_RATIO;
 
 export const DRIP_MIN_LENGTH_RATIO = 0.25;
@@ -102,7 +102,7 @@ export const DRIP_MAX_LENGTH_RATIO = 0.65;
 
 export const DRIP_LENGTH_FREQUENCY = 2.4;
 
-export const DRIP_ORIGIN_RADIUS = TOP_LAYER_RADIUS;
+export const DRIP_ORIGIN_RADIUS = ICING_RADIUS
 
 export const DRIP_BODY_RADIAL_SEGMENTS = 12;
 

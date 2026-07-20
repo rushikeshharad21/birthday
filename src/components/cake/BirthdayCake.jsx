@@ -11,8 +11,8 @@ export default function BirthdayCake() {
       <div className="w-full h-screen">
         <Canvas
           camera={{
-            position: [0, 2.5, 6],
-            fov: 45,
+            position: [3, 2.5, 10],
+            fov: 48,
           }}
           shadows
         >

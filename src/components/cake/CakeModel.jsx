@@ -94,6 +94,7 @@ import {
 import CreamRosettes from "./CreamRosettes";
 import CenterCreamSwirl from "./CenterCreamSwirl";
 import CenterCherry from "./CenterCherry";
+import Strawberries from "./Strawberries";
 // ---------------------------------------------------------------------------
 // 1. Shared geometry
 // ---------------------------------------------------------------------------
@@ -103,7 +104,8 @@ const unitSphereGeometry = new SphereGeometry(1, 32, 16);
 
 // Dedicated low-res cylinder for drip bodies — avoids spending 64 segments
 // on a feature that renders only a few pixels tall.
-const dripBodyGeometry = new CylinderGeometry(1, 1, 1, 12);
+const DRIP_TAPER_RATIO = 0.35;
+const dripBodyGeometry = new CylinderGeometry(1, DRIP_TAPER_RATIO, 1, 12);
 
 // ---------------------------------------------------------------------------
 // 2. Shared materials
@@ -140,15 +142,6 @@ function buildStandProfile() {
   const upperCollarMidY =
     COLUMN_TOP_Y + (UPPER_COLLAR_TOP_Y - COLUMN_TOP_Y) * COLLAR_TRANSITION_RATIO;
 
-  // FIX: both offsets are now the same "margin" quantity —
-  // (1 - PLATE_WALL_HEIGHT_RATIO) * 0.5 * span — applied from the bottom and
-  // mirrored from the top. Previously the top offset used
-  // PLATE_WALL_HEIGHT_RATIO * 0.5 * span instead of (1 - ratio) * 0.5 * span,
-  // which made the two terms cancel algebraically: the resulting wall height
-  // was always exactly 0.5 * span regardless of what PLATE_WALL_HEIGHT_RATIO
-  // was set to. This version makes the wall height actually equal
-  // PLATE_WALL_HEIGHT_RATIO * span, centered in the plate zone, as the name
-  // promises.
   const plateSpan = PLATE_TOP_Y - UPPER_COLLAR_TOP_Y;
   const plateWallMargin = plateSpan * (1 - PLATE_WALL_HEIGHT_RATIO) * 0.5;
   const plateWallBottomY = UPPER_COLLAR_TOP_Y + plateWallMargin;
@@ -186,8 +179,6 @@ function buildIcingProfile() {
     ICING_EDGE_LIFT_HEIGHT +
     (ICING_CAP_HEIGHT - ICING_EDGE_LIFT_HEIGHT) * ICING_EDGE_ROUND_MID_RATIO;
 
-  // Slightly inset the skirt attachment point to eliminate z-fighting with
-  // the sponge top face and side surface.
   const ICING_SKIRT_INSET = 0.002;
 
   return [
@@ -228,8 +219,6 @@ class FrostingPath extends Curve {
 
 const frostingPath = new FrostingPath();
 
-// Pre-flatten the tube geometry so the mesh scale stays uniform (1,1,1).
-// Non-uniform scale on a TubeGeometry distorts normals and breaks lighting.
 const frostingGeometry = (() => {
   const geo = new TubeGeometry(
     frostingPath,
@@ -480,8 +469,9 @@ export default memo(function CakeModel() {
       <CakeDrips />
       <CakeBorders />
       <CreamRosettes />
+      <Strawberries />
       <CenterCreamSwirl />
-        <CenterCherry />
+      <CenterCherry />
     </group>
   );
 });
