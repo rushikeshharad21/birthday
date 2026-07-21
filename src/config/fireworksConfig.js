@@ -59,8 +59,10 @@ export const SMOKE_COLOR = "#dcd6cc"; // warm-grey, not pure black/white
 // ---------------------------------------------------------------------------
 // PHYSICS
 // ---------------------------------------------------------------------------
-export const GRAVITY = 2.4; // world units / s^2 applied to spark velocity.y
-export const SPARK_DRAG = 0.985; // multiplicative per-frame velocity damping — >1 frame-rate independent handling lives in the integrator, not here
+export const GRAVITY = 3.2; // world units / s^2 — steeper fall reads as more physical at cake-scale distances
+export const SPARK_DRAG = 0.965; // stronger deceleration than before — real sparks burst fast, then visibly slow, rather than coasting
+export const SPARK_SPEED_MIN = 2.0; // punchier initial burst velocity, paired with the stronger drag above
+export const SPARK_SPEED_MAX = 3.6;
 export const WIND_STRENGTH_MIN = -0.4; // world units / s, applied to velocity.x each frame
 export const WIND_STRENGTH_MAX = 0.4;
 
@@ -127,19 +129,27 @@ export const SMOKE_POOL_CAPACITY_BY_BREAKPOINT = {
 // ---------------------------------------------------------------------------
 // VISUAL TUNING
 // ---------------------------------------------------------------------------
-export const SPARK_SIZE = 0.035; // world-unit radius at full brightness, before fade-driven scale-down
-export const TRAIL_TUBE_RADIUS = 0.02;
+export const SPARK_SIZE = 0.035; // world-unit radius at full brightness
+export const SPARK_STREAK_STRETCH = 0.09; // streak length per unit of speed — this is what turns a round dot into a light streak
+export const SPARK_STREAK_WIDTH_RATIO = 0.55; // streak width relative to SPARK_SIZE, so it reads as an elongated glowing capsule, not a hairline
+export const TRAIL_TUBE_RADIUS = 0.012; // thinner than before — was reading as a rigid rocket pole rather than a rising spark trail
 export const SMOKE_PUFF_SIZE = 0.18;
 export const SMOKE_RISE_SPEED = 0.15; // world units / s, straight up
 
 export const BLOOM_INTENSITY_BY_BREAKPOINT = {
-  mobile: 0.6, // lighter bloom on mobile — cheaper pass, less GPU fill cost
-  tablet: 0.8,
-  laptop: 1.0,
-  desktop: 1.1,
+  mobile: 0,
+  tablet: 0,
+  laptop: 0,
+  desktop: 0,
 };
-export const BLOOM_LUMINANCE_THRESHOLD = 0.25;
-export const BLOOM_LUMINANCE_SMOOTHING = 0.9;
+// Bloom disabled (intensity 0 everywhere) per feedback — even a high
+// threshold wasn't enough because the cake's own bright, near-white
+// materials under the key light still exceed it in this scene's lighting.
+// Threshold/smoothing are left in place, unused while intensity is 0, so
+// bloom can be re-enabled later (e.g. only for a dedicated fireworks-only
+// layer) without re-deriving these numbers from scratch.
+export const BLOOM_LUMINANCE_THRESHOLD = 0.92;
+export const BLOOM_LUMINANCE_SMOOTHING = 0.15;
 
 // ---------------------------------------------------------------------------
 // DETERMINISTIC VARIATION

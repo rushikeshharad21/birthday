@@ -1,17 +1,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { fadeUp, staggerContainer } from "../../animations/heroVariants";
 
-/**
- * GalleryHeader
- *
- * Section header introducing the "Gallery" storytelling block.
- * Semantic HTML · Tailwind CSS · Framer Motion.
- * Animates in on scroll (once), staggering eyebrow, heading, and
- * paragraph in sequence via shared fadeUp/staggerContainer variants.
- *
- * Respects prefers-reduced-motion: renders directly in its final
- * visible state with no scroll-triggered transition.
- */
 export default function GalleryHeader() {
   const shouldReduceMotion = useReducedMotion();
 
@@ -22,39 +11,65 @@ export default function GalleryHeader() {
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
       variants={staggerContainer()}
-      className="flex flex-col items-center gap-6 px-6 py-24 text-center sm:gap-8 sm:px-10 md:px-16 lg:px-20"
+      className="relative flex flex-col items-center text-center"
     >
+      {/* Badge */}
+      <motion.div variants={fadeUp(0)}>
+        <span
+          style={{
+            color: "#C9A96E",
+            border: "1px solid #DCC9B4",
+            background: "rgba(255,255,255,0.65)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+          }}
+          className="rounded-full px-6 py-2 text-xs font-semibold uppercase tracking-[0.35em] shadow-lg"
+        >
+          Gallery
 
-      {/* ── Eyebrow label ── */}
-      <motion.p
-        variants={fadeUp(0)}
-        className="text-[0.65rem] font-semibold uppercase tracking-[0.30em] text-amber-400/70"
-      >
-        Gallery
-      </motion.p>
+        </span>
+      </motion.div>
+      <br/>
 
-      {/* ── Main heading ── */}
-      
+      {/* Heading */}
       <motion.h2
         id="gallery-heading"
         variants={fadeUp(0.15)}
-        className="text-4xl font-extrabold leading-tight tracking-tight text-transparent bg-gradient-to-br from-white via-amber-100 to-amber-300 bg-clip-text sm:text-5xl md:text-6xl lg:text-7xl"
+        style={{
+          color: "#2C2420",
+          fontWeight: 900,
+          textShadow: "0 2px 12px rgba(255,255,255,.35)",
+        }}
+        className="mt-8 text-5xl leading-[0.9] tracking-[-0.05em] sm:text-6xl md:text-7xl lg:text-8xl"
       >
         Captured
         <br />
         Beautiful Moments
       </motion.h2>
 
-      {/* ── Supporting paragraph ── */}
+      {/* Divider */}
+      <motion.div
+        variants={fadeUp(0.22)}
+        className="mt-8 flex items-center gap-4"
+      >
+        <div className="h-px w-20 bg-[#C9A96E]/40" />
+        <div className="h-2 w-2 rounded-full bg-[#C9A96E]" />
+        <div className="h-px w-20 bg-[#C9A96E]/40" />
+      </motion.div>
+
+      {/* Paragraph */}
       <motion.p
         variants={fadeUp(0.3)}
-        className="max-w-[42rem] text-base font-light leading-relaxed tracking-wide text-white/70 sm:text-lg md:text-xl"
+        style={{
+          color: "#6B5E54",
+        }}
+        className="mt-8 max-w-3xl text-lg leading-9 sm:text-xl"
       >
-        Every photograph holds a story,
-<br className="hidden sm:block" />
-every smile preserves a memory that lives forever.
+        Every photograph tells a story worth remembering.
+        <br className="hidden sm:block" />
+        Each smile, every laugh, and every shared moment becomes a timeless
+        memory that lives forever.
       </motion.p>
-
     </motion.section>
   );
 }

@@ -10,6 +10,7 @@ import {
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
+import BloomLayer from "../effects/BloomLayer";
 
 // ---------------------------------------------------------------------------
 // Breakpoints — single source of truth for the WHOLE app's 3D scenes now,
@@ -29,6 +30,8 @@ function resolveBreakpoint(width) {
   if (width >= BREAKPOINT_TABLET_PX) return "tablet";
   return "mobile";
 }
+
+export { resolveBreakpoint };
 
 /** Rounds aspect to 0.02 steps so resize churn doesn't recompute the
  * camera (and resync R3F's camera object) on every animation frame. */
@@ -310,6 +313,7 @@ export default function SceneCanvas({
               <Environment preset="studio" />
               {children}
             </Suspense>
+            <BloomLayer breakpoint={breakpoint} />
           </Canvas>
         </SceneViewportContext.Provider>
       </WebGLErrorBoundary>

@@ -1,9 +1,12 @@
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { easeOutCubic } from "../particles/FireworkLauncher";
+import { createFireworkSparkMaterial } from "../../shaders/fireworkParticle.glsl";
 import {
   SPARK_SIZE,
+  SPARK_STREAK_STRETCH,
+  SPARK_STREAK_WIDTH_RATIO,
   TRAIL_TUBE_RADIUS,
   SMOKE_PUFF_SIZE,
   SMOKE_COLOR,
@@ -32,12 +35,7 @@ const trailMaterial = new THREE.MeshBasicMaterial({
   depthWrite: false,
 });
 
-const sparkMaterial = new THREE.MeshBasicMaterial({
-  color: "#ffffff",
-  transparent: true,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-});
+const sparkMaterial = createFireworkSparkMaterial();
 
 const smokeMaterial = new THREE.MeshBasicMaterial({
   color: SMOKE_COLOR,
@@ -112,28 +110,55 @@ function writeSparks(pool, mesh) {
   const count = pool.activeCount;
   mesh.count = count;
 
+  // These are set up once per launcher by the useLayoutEffect below, sized
+  // to this pool's exact capacity — see that effect for why they live on
+  // the geometry rather than being recreated here.
+  const fadeAttr = mesh.geometry.getAttribute("aFade");
+  const seedAttr = mesh.geometry.getAttribute("aSeed");
+
   for (let i = 0; i < count; i += 1) {
     const slot = pool.activeIndices[i];
     const position = pool.get("position", slot);
+    const velocity = pool.get("velocity", slot);
     const color = pool.get("color", slot);
     const life = pool.get("life", slot)[0];
     const maxLife = pool.get("maxLife", slot)[0];
+    const seed = pool.get("seed", slot)[0];
     const lifeRatio = Math.max(life / maxLife, 0);
 
     dummy.position.set(position[0], position[1], position[2]);
-    dummy.quaternion.identity();
-    dummy.scale.setScalar(Math.max(SPARK_SIZE * lifeRatio, 0.0001));
+
+    // Orient along the spark's own direction of travel and stretch it —
+    // this is what turns a floating glowing ball into a light streak.
+    // Real sparks are visibly elongated in their direction of motion,
+    // especially right after the burst when they're moving fastest.
+    const speed = Math.hypot(velocity[0], velocity[1], velocity[2]);
+    if (speed > 0.0001) {
+      scratchDirection.set(velocity[0], velocity[1], velocity[2]).multiplyScalar(1 / speed);
+      dummy.quaternion.setFromUnitVectors(UP_AXIS, scratchDirection);
+    } else {
+      dummy.quaternion.identity();
+    }
+
+    const streakLength = Math.max(SPARK_SIZE, speed * SPARK_STREAK_STRETCH);
+    const streakWidth = SPARK_SIZE * SPARK_STREAK_WIDTH_RATIO;
+    dummy.scale.set(streakWidth, streakLength, streakWidth);
     dummy.updateMatrix();
 
     mesh.setMatrixAt(i, dummy.matrix);
-    // Dimming color alongside shrinking scale — with additive blending,
-    // both read as the spark losing brightness as it dies, not just size.
-    scratchColor.setRGB(color[0] * lifeRatio, color[1] * lifeRatio, color[2] * lifeRatio);
+    // Full brightness color — the shader's fresnel glow + aFade handle
+    // brightness/fade now, so no more multiplying by lifeRatio here.
+    scratchColor.setRGB(color[0], color[1], color[2]);
     mesh.setColorAt(i, scratchColor);
+
+    if (fadeAttr) fadeAttr.array[i] = lifeRatio;
+    if (seedAttr) seedAttr.array[i] = seed;
   }
 
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  if (fadeAttr) fadeAttr.needsUpdate = true;
+  if (seedAttr) seedAttr.needsUpdate = true;
 }
 
 function writeSmoke(pool, mesh) {
@@ -184,12 +209,37 @@ export default function FireworkSystem({ launcher }) {
   const sparkRef = useRef(null);
   const smokeRef = useRef(null);
 
+  // The spark shader (fireworkParticle.glsl.js) needs two custom
+  // per-instance attributes beyond the built-in instanceMatrix/
+  // instanceColor: aFade and aSeed. sparkGeometry is a module-scope
+  // shared singleton (reused across the app's lifetime, same as every
+  // other geometry here), so these attributes are attached to it here,
+  // sized exactly to THIS launcher's sparkPool.capacity, and replaced
+  // whenever `launcher` changes (e.g. a breakpoint-driven remount from
+  // useFireworkSequence in Phase 9). Safe because only one FireworkSystem
+  // is ever mounted at a time.
+  useLayoutEffect(() => {
+    const mesh = sparkRef.current;
+    if (!mesh) return;
+
+    const capacity = launcher.sparkPool.capacity;
+    mesh.geometry.setAttribute(
+      "aFade",
+      new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1)
+    );
+    mesh.geometry.setAttribute(
+      "aSeed",
+      new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1)
+    );
+  }, [launcher]);
+
   useFrame((_, delta) => {
     // Clamp delta so a backgrounded tab resuming (or a dev-tools pause)
     // doesn't integrate one huge physics step — particles would otherwise
     // visibly teleport instead of smoothly continuing.
     const dt = Math.min(delta, 1 / 30);
     launcher.update(dt);
+    sparkMaterial.uniforms.uTime.value += dt;
 
     writeTrails(launcher.trailPool, trailRef.current);
     writeSparks(launcher.sparkPool, sparkRef.current);

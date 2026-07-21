@@ -1,0 +1,179 @@
+:root{
+    --cream:#faf6f0;
+
+    --rose:#d4a0a0;
+    --lav:#b8a9c9;
+    --gold:#c9a96e;
+}
+
+/* Main Background */
+
+.birthday-bg{
+    position:fixed;
+    inset:0;
+
+    background:var(--cream);
+
+    overflow:hidden;
+
+    z-index:-100;
+
+    pointer-events:none;
+}
+
+/* Grain */
+
+.birthday-bg::before{
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    opacity:.035;
+
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+    background-size:250px 250px;
+}
+
+/* Vignette */
+
+.birthday-bg::after{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+
+    radial-gradient(
+        ellipse at center,
+        transparent 40%,
+        rgba(0,0,0,.04) 100%
+    );
+}
+
+/* Orbs */
+
+.bg-orb{
+
+    position:absolute;
+
+    border-radius:50%;
+
+    filter:blur(10px);
+
+    animation:drift 25s ease-in-out infinite;
+}
+
+.rose{
+
+    width:850px;
+    height:850px;
+
+    top:-250px;
+    right:-180px;
+
+    background:
+
+    radial-gradient(circle,
+    rgba(212,160,160,.18),
+    transparent 70%);
+}
+
+.lavender{
+
+    width:700px;
+    height:700px;
+
+    bottom:-180px;
+    left:-120px;
+
+    animation-duration:32s;
+
+    background:
+
+    radial-gradient(circle,
+    rgba(184,169,201,.14),
+    transparent 70%);
+}
+
+.gold{
+
+    width:550px;
+    height:550px;
+
+    top:45%;
+    left:40%;
+
+    animation-duration:20s;
+
+    background:
+
+    radial-gradient(circle,
+    rgba(201,169,110,.10),
+    transparent 70%);
+}
+
+/* Floating Dust */
+
+.bg-particle{
+
+    position:absolute;
+
+    bottom:-20px;
+
+    border-radius:50%;
+
+    background:#c9a96e;
+
+    animation:float linear infinite;
+}
+
+/* Animations */
+
+@keyframes drift{
+
+    0%,100%{
+        transform:translate(0,0) scale(1);
+    }
+
+    25%{
+        transform:translate(25px,-20px) scale(1.03);
+    }
+
+    50%{
+        transform:translate(-15px,20px) scale(.98);
+    }
+
+    75%{
+        transform:translate(15px,15px) scale(1.01);
+    }
+
+}
+
+@keyframes float{
+
+    0%{
+        transform:translateY(0) translateX(0);
+        opacity:0;
+    }
+
+    10%{
+        opacity:inherit;
+    }
+
+    90%{
+        opacity:inherit;
+    }
+
+    100%{
+        transform:
+        translateY(-110vh)
+        translateX(var(--drift));
+
+        opacity:0;
+    }
+
+}

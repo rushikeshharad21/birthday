@@ -1,14 +1,33 @@
-export const BOTTOM_LAYER_RADIUS = 1.6;
-export const BOTTOM_LAYER_HEIGHT = 1.1;
+// ---------------------------------------------------------------------------
+// GLOBAL SCALE — the single knob for "make the cake bigger/smaller".
+//
+// Multiplies only the handful of ROOT world-unit constants below (the ones
+// not already derived from another constant via a *_RATIO). Every other
+// dimension in this file — and every decoration file that imports from
+// here (CenterCherry.js, CreamRosettes.js, Strawberries.js,
+// CenterCreamSwirl.js) — is derived from these roots via ratios, so
+// changing this one number resizes the entire cake and all its
+// decorations proportionally.
+//
+// The camera framing in CakeScene.jsx reads CAKE_STAND_RADIUS /
+// CAKE_TOP_SURFACE_Y / CAKE_TOP_LAYER_RADIUS from THIS file, not from the
+// rendered geometry — so it stays correctly fitted to whatever size the
+// cake is here automatically. No camera math needs to change when this
+// number changes.
+// ---------------------------------------------------------------------------
+const CAKE_SCALE = 1.5;
 
-export const TOP_LAYER_RADIUS = 1.05;
-export const TOP_LAYER_HEIGHT = 0.85;
+export const BOTTOM_LAYER_RADIUS = 1.6 * CAKE_SCALE;
+export const BOTTOM_LAYER_HEIGHT = 1.1 * CAKE_SCALE;
+
+export const TOP_LAYER_RADIUS = 1.05 * CAKE_SCALE;
+export const TOP_LAYER_HEIGHT = 0.85 * CAKE_SCALE;
 
 export const CREAM_RING_RADIUS = BOTTOM_LAYER_RADIUS * 0.97; // top tier पेक्षा मोठी, पण bottom tier च्या आत
-export const CREAM_RING_HEIGHT = 0.25;
+export const CREAM_RING_HEIGHT = 0.25 * CAKE_SCALE;
 
 export const STAND_RADIUS = BOTTOM_LAYER_RADIUS * 1.25;
-export const STAND_HEIGHT = 0.15;
+export const STAND_HEIGHT = 0.15 * CAKE_SCALE;
 
 export const BASE_FOOT_RADIUS_RATIO = 0.9;
 export const BASE_BULGE_RADIUS_RATIO = 1.0;

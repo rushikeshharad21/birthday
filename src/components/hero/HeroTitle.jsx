@@ -4,64 +4,183 @@ import { fadeUp, staggerContainer } from "../../animations/heroVariants";
 /**
  * HeroTitle
  *
- * Luxury cinematic birthday title section.
- * Semantic HTML · Tailwind CSS · Framer Motion.
- * No icons · No images.
+ * Premium cinematic hero title.
+ * Architecture unchanged.
  */
+
 export default function HeroTitle() {
   return (
     <motion.header
       initial="hidden"
       animate="visible"
       variants={staggerContainer()}
-      className="flex flex-col items-center gap-6 text-center sm:gap-8"
+      className="flex flex-col items-center text-center"
     >
+      {/* Eyebrow */}
 
-      {/* ── Eyebrow label ── */}
-      <motion.p
-        variants={fadeUp(0)}
-        aria-label="For someone very special"
-        className="flex items-center gap-3 text-[0.65rem] font-semibold uppercase tracking-[0.30em] text-amber-400/70"
+      <motion.div variants={fadeUp(0)}>
+        <span
+          className="
+            inline-flex
+            items-center
+            gap-4
+
+            rounded-full
+
+            border
+            border-white/10
+
+            bg-white/[0.04]
+            backdrop-blur-xl
+
+            px-6
+            py-2.5
+
+            text-[11px]
+            font-semibold
+            uppercase
+            tracking-[0.35em]
+
+            text-[#D4AF37]
+
+            shadow-[0_8px_30px_rgba(0,0,0,0.25)]
+          "
+        >
+          <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#D4AF37]/70" />
+
+          For Someone Very Special
+
+          <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#D4AF37]/70" />
+        </span>
+      </motion.div>
+
+      {/* Heading */}
+
+      <motion.h1
+        variants={fadeUp(0.15)}
+        className="
+          mt-10
+
+          flex
+          flex-col
+          items-center
+
+          gap-3
+        "
       >
-        {/* Decorative side rules */}
-        <span
-          aria-hidden="true"
-          className="block h-px w-8 bg-gradient-to-r from-transparent to-amber-400/50 sm:w-12"
-        />
-        For Someone Very Special
-        <span
-          aria-hidden="true"
-          className="block h-px w-8 bg-gradient-to-l from-transparent to-amber-400/50 sm:w-12"
-        />
-      </motion.p>
+        {/* Happy Birthday */}
 
-      {/* ── Main heading ── */}
-      <motion.h1 variants={fadeUp(0.15)} className="flex flex-col items-center gap-2 sm:gap-3">
+        <span
+          className="
+            text-5xl
+            sm:text-6xl
+            md:text-7xl
+            lg:text-[6rem]
 
-        {/* Line 1 — Happy Birthday */}
-        <span className="block font-extrabold leading-none tracking-tight text-5xl sm:text-6xl md:text-7xl lg:text-8xl bg-gradient-to-br from-white via-amber-100 to-amber-300 bg-clip-text text-transparent">
+            font-black
+
+            leading-[0.92]
+            tracking-[-0.06em]
+
+            bg-gradient-to-b
+            from-white
+            via-[#FFF6E5]
+            to-[#F5D38A]
+
+            bg-clip-text
+            text-transparent
+
+            drop-shadow-[0_8px_30px_rgba(255,230,180,0.12)]
+          "
+        >
           Happy Birthday
         </span>
 
-        {/* Line 2 — My Dear Sister ❤️ */}
-        <span className="block font-extrabold leading-none tracking-tight text-4xl sm:text-5xl md:text-6xl lg:text-7xl bg-gradient-to-br from-rose-200 via-pink-300 to-rose-400 bg-clip-text text-transparent">
+        {/* My Dear Sister */}
+
+        <span
+          className="
+            text-4xl
+            sm:text-5xl
+            md:text-6xl
+            lg:text-7xl
+
+            font-black
+
+            leading-none
+            tracking-[-0.05em]
+
+            bg-gradient-to-r
+            from-[#FFD7E5]
+            via-[#FFB7CC]
+            to-[#FF8FA8]
+
+            bg-clip-text
+            text-transparent
+
+            drop-shadow-[0_8px_30px_rgba(255,120,170,0.12)]
+          "
+        >
           My Dear Sister
         </span>
       </motion.h1>
 
-      {/* ── Glowing divider ── */}
+      {/* Divider */}
+
       <motion.div
         variants={fadeUp(0.3)}
-        aria-hidden="true"
-        className="relative flex items-center justify-center"
+        className="relative mt-10 flex items-center justify-center"
       >
-        {/* Soft blur glow behind the line */}
-        <div className="absolute h-2 w-32 rounded-full bg-amber-300/30 blur-md sm:w-48" />
+        {/* Glow */}
 
-        {/* The actual line */}
-        <hr className="relative border-none h-px w-32 sm:w-48 bg-gradient-to-r from-transparent via-amber-300/80 to-transparent" />
+        <div
+          className="
+            absolute
+
+            h-4
+            w-56
+
+            rounded-full
+
+            bg-[#D4AF37]/20
+
+            blur-2xl
+          "
+        />
+
+        {/* Line */}
+
+        <div
+          className="
+            relative
+
+            h-px
+            w-56
+
+            bg-gradient-to-r
+            from-transparent
+            via-[#D4AF37]
+            to-transparent
+          "
+        />
+
+        {/* Center Dot */}
+
+        <div
+          className="
+            absolute
+
+            h-2
+            w-2
+
+            rounded-full
+
+            bg-[#F5D38A]
+
+            shadow-[0_0_20px_rgba(212,175,55,0.9)]
+          "
+        />
       </motion.div>
-
     </motion.header>
   );
 }

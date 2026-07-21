@@ -1,3 +1,4 @@
+import BirthdayBackground from "../components/background/BirthdayBackground";
 import ScrollProgress from "../components/common/ScrollProgress";
 import Reveal from "../components/common/Reveal";
 
@@ -11,31 +12,31 @@ import FinalWish from "../components/finalWish/FinalWish";
 export default function Home() {
   return (
     <>
-      {/* Global scroll progress */}
+      <BirthdayBackground />
+
       <ScrollProgress />
 
-      {/* Hero */}
-      <Hero />
+      <main style={{ position: "relative", zIndex: 1 }}>
+        <Hero />
 
-      {/* Memories manages its own animations */}
-      <Memories />
+        <Memories />
 
-      {/* Placeholder sections */}
-      <Reveal delay={0.15}>
-        <Gallery />
-      </Reveal>
+        <Reveal delay={0.15}>
+          <Gallery />
+        </Reveal>
 
-      <Reveal delay={0.2}>
-        <BirthdayCake />
-      </Reveal>
+        <Reveal delay={0.2}>
+          <BirthdayCake />
+        </Reveal>
 
-      <Reveal delay={0.25}>
-        <Letter />
-      </Reveal>
+        <Reveal delay={0.25}>
+          <Letter />
+        </Reveal>
 
-      <Reveal delay={0.3}>
-        <FinalWish />
-      </Reveal>
+        <Reveal delay={0.3}>
+          <FinalWish />
+        </Reveal>
+      </main>
     </>
   );
 }

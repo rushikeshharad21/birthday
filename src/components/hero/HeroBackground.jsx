@@ -4,19 +4,11 @@ import { EASE } from "../../animations/heroVariants";
 /**
  * HeroBackground
  *
- * Decorative ambient background for the cinematic hero section.
- * Pure CSS gradients animated with Framer Motion — no images, SVG,
- * canvas, or particle libraries. Motion is restricted to slow,
- * small-amplitude translation on the glow layers only; the base,
- * streak, and vignettes remain static to anchor the composition.
- *
- * This component owns background rendering only. It is intended to
- * sit as an absolutely-positioned layer behind Hero.jsx content and
- * does not manage layout, spacing, or foreground content.
- *
- * Respects prefers-reduced-motion: glow layers stay visible but static
- * (no translation) when the user has reduced motion enabled.
+ * Premium cinematic ambient background.
+ * Apple × Stripe × Linear inspired.
+ * Architecture unchanged — visual quality improved.
  */
+
 export default function HeroBackground() {
   const shouldReduceMotion = useReducedMotion();
 
@@ -25,56 +17,184 @@ export default function HeroBackground() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
     >
-      {/* ── Base layer ── */}
-      <div className="absolute inset-0 bg-neutral-950" />
+      {/* Base */}
+      <div className="absolute inset-0 bg-[#08070D]" />
 
-      {/* ── Warm gold radial glow ── */}
+      {/* Warm luxury gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,232,184,0.08),transparent_55%)]" />
+
+      {/* Gold Glow */}
       <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-1/4 -top-1/4 h-[70vw] w-[70vw] rounded-full bg-[radial-gradient(circle,rgba(217,155,64,0.18),transparent_65%)] blur-3xl transform-gpu sm:h-[55vw] sm:w-[55vw]"
+        className="
+          absolute
+          -left-1/4
+          -top-1/4
+
+          h-[72vw]
+          w-[72vw]
+
+          rounded-full
+
+          bg-[radial-gradient(circle,rgba(212,175,55,0.18),transparent_70%)]
+
+          blur-[140px]
+        "
         initial={{ x: 0, y: 0 }}
-        animate={shouldReduceMotion ? { x: 0, y: 0 } : { x: [0, 30, -10, 0], y: [0, 20, 40, 0] }}
-        transition={
+        animate={
           shouldReduceMotion
-            ? { duration: 0 }
-            : { duration: 26, ease: EASE.SMOOTH, repeat: Infinity, repeatType: "loop" }
+            ? { x: 0, y: 0 }
+            : {
+                x: [0, 40, -20, 0],
+                y: [0, 25, 45, 0],
+              }
         }
+        transition={{
+          duration: 28,
+          ease: EASE.SMOOTH,
+          repeat: Infinity,
+          repeatType: "loop",
+        }}
       />
 
-      {/* ── Violet radial glow ── */}
+      {/* Champagne Glow */}
       <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-1/4 -right-1/4 h-[65vw] w-[65vw] rounded-full bg-[radial-gradient(circle,rgba(124,92,224,0.16),transparent_65%)] blur-3xl transform-gpu sm:h-[50vw] sm:w-[50vw]"
+        className="
+          absolute
+          right-[-18%]
+          top-[8%]
+
+          h-[40vw]
+          w-[40vw]
+
+          rounded-full
+
+          bg-[radial-gradient(circle,rgba(255,240,220,0.10),transparent_72%)]
+
+          blur-[120px]
+        "
         initial={{ x: 0, y: 0 }}
-        animate={shouldReduceMotion ? { x: 0, y: 0 } : { x: [0, -25, 15, 0], y: [0, -30, -10, 0] }}
-        transition={
+        animate={
           shouldReduceMotion
-            ? { duration: 0 }
-            : { duration: 32, ease: EASE.SMOOTH, repeat: Infinity, repeatType: "loop" }
+            ? { x: 0, y: 0 }
+            : {
+                x: [0, -25, 10, 0],
+                y: [0, 20, -15, 0],
+              }
         }
+        transition={{
+          duration: 24,
+          ease: EASE.SMOOTH,
+          repeat: Infinity,
+        }}
       />
 
-      {/* ── Soft teal accent glow ── */}
+      {/* Violet Accent */}
       <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/3 h-[40vw] w-[40vw] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(56,189,180,0.10),transparent_70%)] blur-3xl transform-gpu sm:h-[32vw] sm:w-[32vw]"
+        className="
+          absolute
+          right-[-22%]
+          bottom-[-22%]
+
+          h-[60vw]
+          w-[60vw]
+
+          rounded-full
+
+          bg-[radial-gradient(circle,rgba(124,92,224,0.14),transparent_72%)]
+
+          blur-[140px]
+        "
         initial={{ x: 0, y: 0 }}
-        animate={shouldReduceMotion ? { x: 0, y: 0 } : { x: [0, 18, -18, 0], y: [0, -15, 15, 0] }}
-        transition={
+        animate={
           shouldReduceMotion
-            ? { duration: 0 }
-            : { duration: 21, ease: EASE.SMOOTH, repeat: Infinity, repeatType: "loop" }
+            ? { x: 0, y: 0 }
+            : {
+                x: [0, -35, 18, 0],
+                y: [0, -30, -10, 0],
+              }
         }
+        transition={{
+          duration: 34,
+          ease: EASE.SMOOTH,
+          repeat: Infinity,
+        }}
       />
 
-      {/* ── Horizontal light streak ── */}
-      <div className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      {/* Teal Accent */}
+      <motion.div
+        className="
+          absolute
+          left-1/2
+          top-[40%]
 
-      {/* ── Top / bottom vignette ── */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/70" />
+          h-[34vw]
+          w-[34vw]
 
-      {/* ── Left / right vignette ── */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
+          -translate-x-1/2
+
+          rounded-full
+
+          bg-[radial-gradient(circle,rgba(70,180,170,0.09),transparent_72%)]
+
+          blur-[120px]
+        "
+        initial={{ x: 0, y: 0 }}
+        animate={
+          shouldReduceMotion
+            ? { x: 0, y: 0 }
+            : {
+                x: [0, 20, -18, 0],
+                y: [0, -18, 12, 0],
+              }
+        }
+        transition={{
+          duration: 22,
+          ease: EASE.SMOOTH,
+          repeat: Infinity,
+        }}
+      />
+
+      {/* Premium center light */}
+      <div
+        className="
+          absolute
+          left-1/2
+          top-[45%]
+
+          h-[2px]
+          w-[65%]
+
+          -translate-x-1/2
+
+          bg-gradient-to-r
+          from-transparent
+          via-white/15
+          to-transparent
+        "
+      />
+
+      {/* Soft grid */}
+      <div
+        className="
+          absolute
+          inset-0
+
+          opacity-[0.035]
+
+          [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.12)_1px,transparent_1px)]
+
+          [background-size:80px_80px]
+        "
+      />
+
+      {/* Top vignette */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-transparent" />
+
+      {/* Bottom transition into cream */}
+      <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent via-[#faf6f0]/20 to-[#FAF6F0]" />
+
+      {/* Side vignette */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-transparent to-black/55" />
     </div>
   );
 }

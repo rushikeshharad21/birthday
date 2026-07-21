@@ -1,40 +1,58 @@
 import MemoriesHeader from "./MemoriesHeader";
 import MemoryCard from "./MemoryCard";
-import { memories } from "../../data/Memories.js"
-/**
- * Temporary/inline sample data — replace with a real content source
- * (CMS, JSON, API) when available. Declared at module scope so it's
- * created once, not re-allocated on every render of Memories.
- */
+import { memories } from "../../data/Memories.js";
 
 /**
  * Memories
  *
- * Memory timeline section. Renders a MemoriesHeader followed by a
- * sequence of MemoryCard entries, alternating image/content order
- * on each card (even index: image left, odd index: image right)
- * to create a visual rhythm down the page.
- *
- * Data is temporary/inline pending a real content source — see
- * inline comment above. MemoryCard itself owns no data and accepts
- * only `memory` + `reverse`, per its existing API.
+ * Premium storytelling section.
+ * Designed to sit on the global luxury background.
  */
+
 export default function Memories() {
   return (
     <section
-      aria-label="Memories timeline"
-      className="flex min-h-screen flex-col gap-16 px-6 py-24 sm:gap-20 sm:px-10 md:px-16 lg:px-20"
-    >
-      <MemoriesHeader />
+      id="memories"
+      aria-labelledby="memories-heading"
+      className="
+        relative
+        isolate
+        overflow-hidden
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-12 sm:gap-16">
-        {memories.map((memory, index) => (
-          <MemoryCard
-            key={memory.id}
-            memory={memory}
-            reverse={index % 2 !== 0}
-          />
-        ))}
+        py-32
+        sm:py-40
+
+        px-6
+        sm:px-10
+        md:px-16
+        lg:px-20
+      "
+    >
+      {/* Soft radial glow */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          -z-10
+
+          bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.28)_0%,transparent_70%)]
+        "
+      />
+
+      <div className="mx-auto max-w-7xl">
+        <MemoriesHeader />
+
+        <div className="mt-20 flex flex-col gap-14 lg:gap-20">
+          {memories.map((memory, index) => (
+            <MemoryCard
+              key={memory.id}
+              memory={memory}
+              reverse={index % 2 !== 0}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -7,6 +7,7 @@ import SceneCanvas, {
   BREAKPOINT_LAPTOP_PX,
 } from "../../three/core/SceneCanvas";
 import CakeModel from "./CakeModel";
+import FireworkSystem from "../../three/effects/FireworkSystem";
 import {
   CAKE_TOP_SURFACE_Y,
   CAKE_TOP_LAYER_RADIUS,
@@ -24,13 +25,11 @@ const CAKE_TOTAL_HEIGHT = CAKE_TOP_SURFACE_Y - CAKE_BASE_Y;
 // ---------------------------------------------------------------------------
 // Per-breakpoint hero composition — unchanged from prior pass. This stays
 // here (not in SceneCanvas) because it's derived from the cake's actual
-// bounding sphere, which SceneCanvas has no knowledge of.
-// ---------------------------------------------------------------------------
 const FRAME_CONFIG = {
-  mobile: { fillFraction: 0.34, elevationDeg: 80, azimuthDeg: 15 },
-  tablet: { fillFraction: 0.44, elevationDeg: 79, azimuthDeg: 18 },
-  laptop: { fillFraction: 0.50, elevationDeg: 78, azimuthDeg: 20 },
-  desktop: { fillFraction: 0.54, elevationDeg: 77, azimuthDeg: 22 },
+  mobile:  { fillFraction: 0.62, elevationDeg: 80, azimuthDeg: 15 },
+  tablet:  { fillFraction: 0.60, elevationDeg: 79, azimuthDeg: 18 },
+  laptop:  { fillFraction: 0.62, elevationDeg: 78, azimuthDeg: 20 },
+  desktop: { fillFraction: 0.66, elevationDeg: 77, azimuthDeg: 22 },
 };
 const BASE_VERTICAL_FOV_DEG = 35;
 const CAMERA_DISTANCE_SAFETY_MARGIN = 1.18;
@@ -127,13 +126,15 @@ const FALLBACK_MESSAGE =
 // SceneCanvas. Reads breakpoint via useSceneViewport() (provided by
 // SceneCanvas's context) instead of re-deriving it locally.
 // ---------------------------------------------------------------------------
-function CakeSceneContents() {
+function CakeSceneContents({ fireworkLauncher }) {
   const { breakpoint } = useSceneViewport();
   const rotateSpeed = ORBIT_ROTATE_SPEED[breakpoint];
 
   return (
     <>
       <CakeModel />
+
+      {fireworkLauncher && <FireworkSystem launcher={fireworkLauncher} />}
 
       <ContactShadows
         position={[0, -0.001, 0]}
@@ -163,7 +164,7 @@ function CakeSceneContents() {
 // CakeScene — public API unchanged (default export, no required props), so
 // BirthdayCake.jsx and anything else importing it needs no changes.
 // ---------------------------------------------------------------------------
-export default function CakeScene() {
+export default function CakeScene({ fireworkLauncher = null }) {
   // Container height per breakpoint: mobile deliberately stays well short
   // of 100vh so the next section's top edge is visible on initial load.
   // Unchanged from prior pass, now built from SceneCanvas's exported
@@ -183,7 +184,7 @@ export default function CakeScene() {
       fallbackMessage={FALLBACK_MESSAGE}
       debugLabel="CakeScene"
     >
-      <CakeSceneContents />
+      <CakeSceneContents fireworkLauncher={fireworkLauncher} />
     </SceneCanvas>
   );
 }

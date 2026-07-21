@@ -4,14 +4,10 @@ import { fadeUp, staggerContainer } from "../../animations/heroVariants";
 /**
  * MemoriesHeader
  *
- * Section header introducing the "Memories" storytelling block.
- * Semantic HTML · Tailwind CSS · Framer Motion.
- * Animates in on scroll (once), staggering eyebrow, heading, and
- * paragraph in sequence via shared fadeUp/staggerContainer variants.
- *
- * Respects prefers-reduced-motion: renders directly in its final
- * visible state with no scroll-triggered transition.
+ * Premium luxury section header
+ * Designed for warm cream background.
  */
+
 export default function MemoriesHeader() {
   const shouldReduceMotion = useReducedMotion();
 
@@ -24,34 +20,102 @@ export default function MemoriesHeader() {
       variants={staggerContainer()}
       className="flex flex-col items-center gap-6 px-6 py-24 text-center sm:gap-8 sm:px-10 md:px-16 lg:px-20"
     >
+      {/* Eyebrow */}
 
-      {/* ── Eyebrow label ── */}
-      <motion.p
-        variants={fadeUp(0)}
-        className="text-[0.65rem] font-semibold uppercase tracking-[0.30em] text-amber-400/70"
-      >
-        Our Memories
-      </motion.p>
+      <motion.div variants={fadeUp(0)}>
+        <span
+          className="
+            inline-flex
+            items-center
 
-      {/* ── Main heading ── */}
+            rounded-full
+
+            border
+            border-[#DCC9B4]
+
+            bg-white/60
+            backdrop-blur-xl
+
+            px-6
+            py-2
+
+            text-xs
+            font-semibold
+            uppercase
+            tracking-[0.35em]
+
+            text-[#C9A96E]
+
+            shadow-[0_8px_30px_rgba(44,36,32,0.05)]
+          "
+        >
+          Our Memories
+        </span>
+      </motion.div>
+
+      {/* Heading */}
+
       <motion.h2
         id="memories-heading"
         variants={fadeUp(0.15)}
-        className="text-4xl font-extrabold leading-tight tracking-tight text-transparent bg-gradient-to-br from-white via-amber-100 to-amber-300 bg-clip-text sm:text-5xl md:text-6xl lg:text-7xl"
+        style={{
+          color: "#2C2420",
+          textShadow: "0 2px 10px rgba(255,255,255,.35)",
+        }}
+        className="
+          max-w-5xl
+
+          text-5xl
+          font-black
+          leading-[0.92]
+          tracking-[-0.05em]
+
+          sm:text-6xl
+          md:text-7xl
+          lg:text-8xl
+
+          mt-6
+        "
       >
         A Journey Through
         <br />
         Beautiful Moments
       </motion.h2>
 
-      {/* ── Supporting paragraph ── */}
+      {/* Luxury Divider */}
+
+      <motion.div
+        variants={fadeUp(0.22)}
+        className="flex items-center gap-4 mt-2"
+      >
+        <div className="h-px w-16 bg-gradient-to-r from-transparent via-[#C9A96E] to-transparent" />
+
+        <div className="h-2 w-2 rounded-full bg-[#C9A96E]" />
+
+        <div className="h-px w-16 bg-gradient-to-r from-transparent via-[#C9A96E] to-transparent" />
+      </motion.div>
+
+      {/* Description */}
+
       <motion.p
         variants={fadeUp(0.3)}
-        className="max-w-[650px] text-base font-light leading-relaxed tracking-wide text-white/70 sm:text-lg md:text-xl"
-      >
-        Every smile, every laugh, and every shared moment has become part of a story we&apos;ll cherish forever.
-      </motion.p>
+        style={{
+          color: "#6B5E54",
+        }}
+        className="
+          max-w-[700px]
 
+          text-lg
+          font-normal
+          leading-9
+
+          sm:text-xl
+          mt-2
+        "
+      >
+        Every smile, every laugh, and every shared moment has become part of a
+        story we'll cherish forever.
+      </motion.p>
     </motion.section>
   );
 }

@@ -7,6 +7,8 @@ import {
   FIREWORK_COLOR_PALETTE,
   GRAVITY,
   SPARK_DRAG,
+  SPARK_SPEED_MIN,
+  SPARK_SPEED_MAX,
   WIND_STRENGTH_MIN,
   WIND_STRENGTH_MAX,
   LAUNCH_INTERVAL_MIN,
@@ -103,6 +105,11 @@ export default class FireworkLauncher {
       color: 3,
       life: 1,
       maxLife: 1,
+      // Stable per-particle random value, assigned once at spawn (see
+      // _explode below) and never touched again — the shader
+      // (fireworkParticle.glsl.js) uses it to phase-offset each spark's
+      // twinkle so a burst shimmers instead of pulsing in lockstep.
+      seed: 1,
     });
 
     const smokeCapacity = SMOKE_POOL_CAPACITY_BY_BREAKPOINT[breakpoint];
@@ -260,14 +267,16 @@ export default class FireworkLauncher {
       const dirY = u;
       const dirZ = sinPhi * Math.sin(theta);
 
-      const speed = randRange(this._rng, 1.4, 2.6);
+      const speed = randRange(this._rng, SPARK_SPEED_MIN, SPARK_SPEED_MAX);
       const life = randRange(this._rng, SPARK_LIFETIME_MIN, SPARK_LIFETIME_MAX);
+      const seed = this._rng();
 
       this.sparkPool.set("position", slot, [apex[0], apex[1], apex[2]]);
       this.sparkPool.set("velocity", slot, [dirX * speed, dirY * speed, dirZ * speed]);
       this.sparkPool.set("color", slot, [color[0], color[1], color[2]]);
       this.sparkPool.set("life", slot, [life]);
       this.sparkPool.set("maxLife", slot, [life]);
+      this.sparkPool.set("seed", slot, [seed]);
     }
 
     for (let i = 0; i < this._smokePerExplosion; i += 1) {

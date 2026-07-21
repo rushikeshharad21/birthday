@@ -35,13 +35,6 @@ import * as THREE from "three";
 // ---------------------------------------------------------------------------
 
 export const fireworkSparkVertexShader = /* glsl */ `
-  #ifdef USE_INSTANCING
-    attribute mat4 instanceMatrix;
-  #endif
-  #ifdef USE_INSTANCING_COLOR
-    attribute vec3 instanceColor;
-  #endif
-
   attribute float aFade;
   attribute float aSeed;
 

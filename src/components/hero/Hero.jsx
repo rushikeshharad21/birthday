@@ -5,51 +5,82 @@ import ScrollIndicator from "./ScrollIndicator";
 import HeroBackground from "./HeroBackground";
 
 /**
- * Hero — full-viewport landing section.
+ * Hero
  *
- * Composes:
- *   <HeroBackground />
- *   <HeroTitle />
- *   <HeroSubtitle />
- *   <HeroButton />
- *   <ScrollIndicator />
- *
- * Layout: dark cinematic luxury background rendered by HeroBackground
- * (layered, animated CSS gradients — no images, no third-party
- * animation libraries beyond Framer Motion).
+ * Cinematic luxury introduction.
+ * Dark Hero → Warm Storytelling transition.
  */
+
 export default function Hero() {
   return (
     <section
       aria-label="Hero"
-      className="relative min-h-screen w-full overflow-hidden bg-[#080810]"
+      className="
+        relative
+        isolate
+
+        min-h-screen
+        w-full
+
+        overflow-hidden
+
+        bg-[#07070B]
+      "
     >
-      {/* ── Ambient background ── */}
+      {/* Ambient Background */}
       <HeroBackground />
 
-      {/* ── Main content column ── */}
+      {/* Bottom fade into cream section */}
       <div
-        className={[
-          "relative z-10",
-          "flex min-h-screen flex-col items-center justify-center",
-          "mx-auto w-full max-w-6xl",
-          "px-6 py-24 sm:px-10 md:px-16 lg:px-20",
-          "gap-6 sm:gap-8",
-        ].join(" ")}
+        className="
+          pointer-events-none
+          absolute
+          inset-x-0
+          bottom-0
+          h-52
+          bg-gradient-to-b
+          from-transparent
+          via-[#f8f4ee]/40
+          to-[#FAF6F0]
+          z-10
+        "
+      />
+
+      {/* Hero Content */}
+      <div
+        className="
+          relative
+          z-20
+
+          mx-auto
+          flex
+          min-h-screen
+          w-full
+          max-w-7xl
+
+          flex-col
+          items-center
+          justify-center
+
+          px-6
+          py-24
+
+          sm:px-10
+          md:px-16
+          lg:px-20
+        "
       >
-        {/* Primary heading */}
         <HeroTitle />
 
-        {/* Supporting copy */}
-        <HeroSubtitle />
+        <div className="mt-8">
+          <HeroSubtitle />
+        </div>
 
-        {/* Call-to-action */}
-        <div className="mt-4 sm:mt-6">
+        <div className="mt-10">
           <HeroButton />
         </div>
 
-        {/* Scroll affordance — pushed toward the bottom of the viewport */}
-        <div className="mt-auto pt-16 sm:pt-20">
+        <div className="mt-auto pt-20">
           <ScrollIndicator />
         </div>
       </div>

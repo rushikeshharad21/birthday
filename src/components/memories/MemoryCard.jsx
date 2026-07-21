@@ -5,77 +5,220 @@ import { fadeUp, scaleIn } from "../../animations/heroVariants";
 /**
  * MemoryCard
  *
- * Single memory entry in an alternating two-column storytelling layout.
- * Desktop/tablet: image and content sit side by side, order controlled
- * by `reverse`. Mobile: always stacked, image first.
- *
- * Motion: the whole card fades/translates in via <Reveal>; image and
- * content animate independently within that reveal using shared
- * scaleIn/fadeUp variants (state propagates down from Reveal's
- * motion.div). Hover lift is a plain CSS transition, not a Framer
- * Motion interaction state, to avoid stacking a fourth motion source
- * on top of the entry animation.
- *
- * @param {object} memory - { image, alt, title, description, year }
- * @param {boolean} reverse - flips column order on desktop/tablet
+ * Premium Apple × Stripe inspired card
+ * Logic unchanged — only UI upgraded.
  */
+
 export default function MemoryCard({ memory, reverse = false }) {
-    if (!memory) return null;
+  if (!memory) return null;
+
   const { image, alt, title, description, year } = memory;
 
   return (
     <Reveal>
       <article
-        className="group grid grid-cols-1 overflow-hidden items-center gap-8 rounded-3xl border border-white/8 bg-white/[0.03] p-6 shadow-[0_20px_60px_rgba(0,0,0,.35)] shadow-black/30 backdrop-blur-md transition-transform duration-300 ease-out hover:-translate-y-2 hover:border-white/15 hover:shadow-xl hover:shadow-black/40 sm:p-8 md:grid-cols-2 md:gap-12 md:p-10"
-      >
+        className="
+          group
+          relative
 
-        {/* ── Image ── */}
+          grid
+          grid-cols-1
+          items-center
+          gap-8
+
+          overflow-hidden
+
+          rounded-[32px]
+
+          border
+          border-[#E6D8C9]
+
+          bg-white/55
+          backdrop-blur-2xl
+
+          p-6
+          sm:p-8
+          md:grid-cols-2
+          md:gap-12
+          md:p-10
+
+          shadow-[0_16px_60px_rgba(44,36,32,0.08)]
+
+          transition-all
+          duration-700
+          ease-[cubic-bezier(0.22,1,0.36,1)]
+
+          hover:-translate-y-2
+          hover:border-[#C9A96E]
+          hover:shadow-[0_28px_80px_rgba(44,36,32,0.14)]
+        "
+      >
+        {/* Glass Highlight */}
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+
+            rounded-[32px]
+
+            bg-gradient-to-br
+            from-white/35
+            via-transparent
+            to-[#F5EDE3]/20
+          "
+        />
+
+        {/* Image */}
+
         <motion.div
           variants={scaleIn()}
-          className={`aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 ${
-            reverse ? "md:order-2" : "md:order-1"
-          }`}
+          className={`
+            relative
+            aspect-[4/3]
+            overflow-hidden
+            rounded-[24px]
+
+            border
+            border-[#EFE3D7]
+
+            ${reverse ? "md:order-2" : "md:order-1"}
+          `}
         >
           <img
             src={image}
             alt={alt}
             loading="lazy"
             decoding="async"
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className="
+              h-full
+              w-full
+              object-cover
+
+              transition-all
+              duration-700
+              ease-[cubic-bezier(0.22,1,0.36,1)]
+
+              group-hover:scale-[1.04]
+              group-hover:brightness-105
+              group-hover:contrast-[1.04]
+              group-hover:saturate-110
+            "
+          />
+
+          {/* Soft Luxury Overlay */}
+
+          <div
+            className="
+              absolute
+              inset-0
+
+              bg-gradient-to-t
+              from-black/10
+              via-transparent
+              to-white/10
+
+              opacity-0
+
+              transition-opacity
+              duration-500
+
+              group-hover:opacity-100
+            "
           />
         </motion.div>
 
-        {/* ── Content ── */}
+        {/* Content */}
+
         <motion.div
           variants={fadeUp(0.15)}
-          className={`flex flex-col gap-4 ${reverse ? "md:order-1" : "md:order-2"}`}
+          className={`flex flex-col gap-5 ${
+            reverse ? "md:order-1" : "md:order-2"
+          }`}
         >
+          {/* Year */}
 
-          {/* Year badge — only when provided */}
           {year && (
-            <span className="w-fit rounded-full border border-amber-400/30 bg-white/5 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-widest text-amber-400/80">
+            <span
+              className="
+                w-fit
+
+                rounded-full
+
+                border
+                border-[#DCC9B4]
+
+                bg-white/60
+                backdrop-blur-xl
+
+                px-4
+                py-1.5
+
+                text-[11px]
+                font-semibold
+                uppercase
+                tracking-[0.25em]
+
+                text-[#C9A96E]
+              "
+            >
               {year}
             </span>
           )}
 
-          {/* Decorative divider */}
+          {/* Divider */}
+
           <div
             aria-hidden="true"
-            className="h-px w-16 bg-gradient-to-r from-amber-300/80 to-transparent"
+            className="
+              h-px
+              w-20
+
+              bg-gradient-to-r
+              from-[#C9A96E]
+              via-[#E5D2B8]
+              to-transparent
+            "
           />
 
           {/* Title */}
-          <h3 className="text-2xl font-extrabold leading-tight tracking-tight text-transparent bg-gradient-to-br from-white via-amber-100 to-amber-300 bg-clip-text sm:text-3xl md:text-4xl">
+
+          <h3
+            className="
+              text-3xl
+              md:text-4xl
+
+              font-black
+
+              leading-tight
+              tracking-[-0.03em]
+
+              text-[#2C2420]
+            "
+          >
             {title}
           </h3>
 
           {/* Description */}
-          <p className="text-base font-light leading-relaxed tracking-wide text-white/70 sm:text-lg">
+
+          <p
+            className="
+              max-w-xl
+
+              text-base
+              md:text-lg
+
+              leading-8
+
+              font-normal
+
+              text-[#6B5E54]
+            "
+          >
             {description}
           </p>
-
         </motion.div>
-
       </article>
     </Reveal>
   );
