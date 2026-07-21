@@ -34,6 +34,7 @@ export default function GalleryHeader() {
       </motion.p>
 
       {/* ── Main heading ── */}
+      
       <motion.h2
         id="gallery-heading"
         variants={fadeUp(0.15)}

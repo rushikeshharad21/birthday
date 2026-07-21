@@ -21,6 +21,8 @@ const BREAKPOINT_TABLET_PX = 768;
 const BREAKPOINT_DESKTOP_PX = 1024;
 const BREAKPOINT_LAPTOP_PX = 1280;
 
+export { BREAKPOINT_TABLET_PX, BREAKPOINT_DESKTOP_PX, BREAKPOINT_LAPTOP_PX };
+
 function resolveBreakpoint(width) {
   if (width >= BREAKPOINT_LAPTOP_PX) return "desktop";
   if (width >= BREAKPOINT_DESKTOP_PX) return "laptop";

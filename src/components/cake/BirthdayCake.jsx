@@ -6,9 +6,9 @@ export default function BirthdayCake() {
   return (
     <section
       aria-label="Birthday cake"
-      className="min-h-screen flex items-center justify-center"
+      className="min-h-[75vh] flex items-center justify-center bg-red-100/70"
     >
-      <div className="w-full h-screen">
+      <div className="w-full h-[70vh] ">
         <Canvas
           camera={{
             position: [3, 2.5, 10],
