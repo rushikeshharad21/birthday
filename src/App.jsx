@@ -5,7 +5,7 @@ import MusicAutoplayHint from "./components/music/MusicAutoplayHint";
 function App() {
   return (
     <MusicProvider>
-      <Home />
+      <Home/>
       <MusicAutoplayHint />
     </MusicProvider>
   );
