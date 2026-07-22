@@ -25,11 +25,13 @@ const CAKE_TOTAL_HEIGHT = CAKE_TOP_SURFACE_Y - CAKE_BASE_Y;
 // ---------------------------------------------------------------------------
 // Per-breakpoint hero composition — unchanged from prior pass. This stays
 // here (not in SceneCanvas) because it's derived from the cake's actual
+// bounding sphere, which SceneCanvas has no knowledge of.
+// ---------------------------------------------------------------------------
 const FRAME_CONFIG = {
-  mobile:  { fillFraction: 0.62, elevationDeg: 80, azimuthDeg: 15 },
-  tablet:  { fillFraction: 0.60, elevationDeg: 79, azimuthDeg: 18 },
-  laptop:  { fillFraction: 0.62, elevationDeg: 78, azimuthDeg: 20 },
-  desktop: { fillFraction: 0.66, elevationDeg: 77, azimuthDeg: 22 },
+  mobile: { fillFraction: 0.95, elevationDeg: 23, azimuthDeg: 25 },
+  tablet: { fillFraction: 0.48, elevationDeg: 34, azimuthDeg: 28 },
+  laptop: { fillFraction: 0.54, elevationDeg: 30, azimuthDeg: 32 },
+  desktop: { fillFraction: 0.58, elevationDeg: 26, azimuthDeg: 36 },
 };
 const BASE_VERTICAL_FOV_DEG = 35;
 const CAMERA_DISTANCE_SAFETY_MARGIN = 1.18;

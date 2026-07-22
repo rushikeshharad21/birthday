@@ -111,21 +111,23 @@ const dripBodyGeometry = new CylinderGeometry(1, DRIP_TAPER_RATIO, 1, 12);
 // 2. Shared materials
 // ---------------------------------------------------------------------------
 const cakeMaterial = new MeshStandardMaterial({
-  color: "#f3e5c8",
+  color: "#be770b", // richer honey-vanilla — a pale/desaturated tone is what reads as washed-out under reduced lighting; deeper color stays visibly "colored" even when dim
   roughness: 0.6,
   metalness: 0.05,
+  envMapIntensity: 0.2,
 });
 
 const creamMaterial = new MeshStandardMaterial({
-  color: "#fffaf0",
+  color: "#e2138c", // warm vanilla-ivory instead of near-pure-white
   roughness: 0.4,
   metalness: 0.0,
+  envMapIntensity: 0.2,
 });
 
 const standMaterial = new MeshStandardMaterial({
-  color: "#b8985a",
-  roughness: 0.3,
-  metalness: 0.9,
+  color: "#46320c", // classic gold
+  roughness: 0.35,
+  metalness: 0.6, // lowered from 0.9 — at very high metalness a material depends almost entirely on environment reflections to read as bright at all; now that lighting/env intensity are dimmed, that made the stand look near-black. Lower metalness means it's visible from its own base color too, not just reflections.
 });
 
 

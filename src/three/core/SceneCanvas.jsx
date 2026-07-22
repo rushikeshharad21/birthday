@@ -109,7 +109,7 @@ const DPR_RANGE_BY_BREAKPOINT = {
   desktop: [1, 2],
 };
 
-const TONE_MAPPING_EXPOSURE = 1.1;
+const TONE_MAPPING_EXPOSURE = 0.75;
 const DEFAULT_SCENE_BACKGROUND_COLOR = "#0a0a0a";
 
 // ---------------------------------------------------------------------------
@@ -128,12 +128,12 @@ const LIGHT_COLOR_KEY = "#ffddaa";
 const LIGHT_COLOR_FILL = "#bcd4ff";
 const LIGHT_COLOR_RIM = "#ffe9c7";
 
-const LIGHT_INTENSITY_AMBIENT = 0.25;
-const LIGHT_INTENSITY_KEY = 1.4;
-const LIGHT_INTENSITY_FILL = 0.35;
-const LIGHT_INTENSITY_RIM = 0.8;
+const LIGHT_INTENSITY_AMBIENT = 0.15;
+const LIGHT_INTENSITY_KEY = 0.01;
+const LIGHT_INTENSITY_FILL = 0.2;
+const LIGHT_INTENSITY_RIM = 0.35;
 
-const KEY_LIGHT_POSITION = [4, 6, 3];
+const KEY_LIGHT_POSITION = [1, 1, 1];
 const FILL_LIGHT_POSITION = [-4, 2, -2];
 const RIM_LIGHT_POSITION = [0, 3.5, -4];
 const RIM_LIGHT_ANGLE = 0.5;

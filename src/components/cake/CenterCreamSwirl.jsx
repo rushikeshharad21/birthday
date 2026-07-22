@@ -126,7 +126,7 @@ centerCreamSwirlGeometry.computeVertexNormals();
 // Dialing down envMapIntensity reduces reflection sharpness/strength
 // without touching color or introducing a second material type.
 const centerCreamSwirlMaterial = new THREE.MeshStandardMaterial({
-  color: "#fdf8ef",
+  color: "#e7390e",
   roughness: 0.55,
   metalness: 0,
   envMapIntensity: 0.5,

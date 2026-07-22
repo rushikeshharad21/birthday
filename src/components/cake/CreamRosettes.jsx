@@ -152,7 +152,7 @@ applyStarLobing(rosetteGeometry);
 // specular width and reflection sharpness picked up from the scene's
 // studio Environment map, so both levers matter, not roughness alone.
 const rosetteMaterial = new THREE.MeshStandardMaterial({
-  color: "#fdf8ef", // matches the cream filling's warm-white tone
+  color: "#12ac0d", // matches the cream filling's warm-white tone
   roughness: 0.58,
   metalness: 0,
   envMapIntensity: 0.5,
