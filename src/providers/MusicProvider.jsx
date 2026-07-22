@@ -78,6 +78,12 @@ export default function MusicProvider({ children }) {
     };
   }, []);
 
+  function play() {
+    const audio = audioRef.current;
+    if (!audio || !audio.paused) return;
+    audio.play().catch(() => {});
+  }
+
   function toggle() {
     const audio = audioRef.current;
     if (!audio) return;
@@ -89,7 +95,7 @@ export default function MusicProvider({ children }) {
   }
 
   return (
-    <MusicContext.Provider value={{ isPlaying, toggle }}>
+    <MusicContext.Provider value={{ isPlaying, play, toggle }}>
       {children}
     </MusicContext.Provider>
   );
