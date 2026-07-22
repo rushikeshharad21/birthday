@@ -8,6 +8,7 @@ import Gallery from "../components/gallery/Gallery";
 import BirthdayCake from "../components/cake/BirthdayCake";
 import Letter from "../components/letter/Letter";
 import FinalWish from "../components/finalWish/FinalWish";
+import Footer from "../components/footer/Footer";
 
 export default function Home() {
   return (
@@ -36,6 +37,8 @@ export default function Home() {
         <Reveal delay={0.3}>
           <FinalWish />
         </Reveal>
+
+        <Footer />
       </main>
     </>
   );
