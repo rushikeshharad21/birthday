@@ -4,11 +4,12 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
 import * as THREE from "three";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
 import BloomLayer from "../effects/BloomLayer";
 
@@ -129,11 +130,11 @@ const LIGHT_COLOR_FILL = "#bcd4ff";
 const LIGHT_COLOR_RIM = "#ffe9c7";
 
 const LIGHT_INTENSITY_AMBIENT = 0.15;
-const LIGHT_INTENSITY_KEY = 0.01;
+const LIGHT_INTENSITY_KEY = 0.65;
 const LIGHT_INTENSITY_FILL = 0.2;
 const LIGHT_INTENSITY_RIM = 0.35;
 
-const KEY_LIGHT_POSITION = [1, 1, 1];
+const KEY_LIGHT_POSITION = [4, 6, 3];
 const FILL_LIGHT_POSITION = [-4, 2, -2];
 const RIM_LIGHT_POSITION = [0, 3.5, -4];
 const RIM_LIGHT_ANGLE = 0.5;
@@ -238,6 +239,46 @@ const DEFAULT_FALLBACK_MESSAGE =
   "This 3D experience isn't supported in your current browser. Please try a modern browser.";
 
 // ---------------------------------------------------------------------------
+// Camera framing from the REAL canvas size.
+//
+// This replaces framing based on window.innerWidth/innerHeight, which was
+// wrong whenever the Canvas isn't full-screen — e.g. the cake's canvas is
+// constrained to a max-w-4xl wrapper with a clamp() height, so on a tall
+// mobile phone (window aspect ~0.46) the math assumed a much narrower
+// frustum than the canvas actually has, pulling the camera back far
+// further than needed and making the cake look tiny/distant.
+//
+// useThree's `size` reflects the Canvas element's actual rendered pixel
+// dimensions (R3F's own ResizeObserver), so this is always correct
+// regardless of how the canvas is laid out on the page.
+// ---------------------------------------------------------------------------
+function CameraRig({ computeCamera, breakpoint, debugLabel }) {
+  const camera = useThree((state) => state.camera);
+  const width = useThree((state) => state.size.width);
+  const height = useThree((state) => state.size.height);
+
+  useLayoutEffect(() => {
+    if (width === 0 || height === 0) return;
+
+    const aspect = width / height;
+    const { position, fov } = computeCamera(aspect, breakpoint);
+    camera.position.set(...position);
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+
+    // eslint-disable-next-line no-console
+    console.log(`[${debugLabel}] camera framed:`, {
+      breakpoint,
+      aspect: Math.round(aspect * 100) / 100,
+      canvasSize: { width, height },
+      position,
+    });
+  }, [width, height, breakpoint, computeCamera, camera, debugLabel]);
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // SceneCanvas — the ONE <Canvas> in the app.
 //
 // `computeCamera(aspect, breakpoint)` stays a caller-supplied function
@@ -289,23 +330,9 @@ export default function SceneCanvas({
               toneMapping: THREE.ACESFilmicToneMapping,
               toneMappingExposure: TONE_MAPPING_EXPOSURE,
             }}
-            onCreated={({ gl, scene, camera }) => {
+            onCreated={({ gl, scene }) => {
               gl.setClearColor(backgroundColor, 1);
               scene.background = new THREE.Color(backgroundColor);
-
-              // Belt-and-suspenders: set the camera position directly here
-              // too, not just via the `camera` prop — same reasoning as
-              // before (guards against any prop-merge timing quirk).
-              const { position, fov } = computeCamera(aspect, breakpoint);
-              camera.position.set(...position);
-              camera.fov = fov;
-              camera.updateProjectionMatrix();
-
-              // eslint-disable-next-line no-console
-              console.log(`[${debugLabel}] camera framed:`, {
-                breakpoint,
-                position,
-              });
             }}
           >
             <Suspense fallback={null}>
@@ -313,6 +340,11 @@ export default function SceneCanvas({
               <Environment preset="studio" />
               {children}
             </Suspense>
+            <CameraRig
+              computeCamera={computeCamera}
+              breakpoint={breakpoint}
+              debugLabel={debugLabel}
+            />
             <BloomLayer breakpoint={breakpoint} />
           </Canvas>
         </SceneViewportContext.Provider>

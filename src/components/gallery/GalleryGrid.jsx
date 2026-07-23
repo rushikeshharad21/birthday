@@ -15,8 +15,8 @@ import GalleryCard from "./GalleryCard";
 export default function GalleryGrid({ photos }) {
   return (
     <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
-      {photos?.map((photo) => (
-        <GalleryCard key={photo.id} photo={photo} />
+      {photos?.map((photo, index) => (
+        <GalleryCard key={photo.id} photo={photo} index={index} />
       ))}
     </div>
   );
