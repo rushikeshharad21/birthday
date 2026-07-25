@@ -10,7 +10,7 @@ import {
 } from "react";
 import * as THREE from "three";
 import { Canvas, useThree } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
+import { Environment, useProgress } from "@react-three/drei";
 import BloomLayer from "../effects/BloomLayer";
 
 // ---------------------------------------------------------------------------
@@ -239,6 +239,31 @@ const DEFAULT_FALLBACK_MESSAGE =
   "This 3D experience isn't supported in your current browser. Please try a modern browser.";
 
 // ---------------------------------------------------------------------------
+// Loading overlay — sits INSIDE our own container (position: absolute,
+// relative to containerClassName below), not drei's global, fixed-position
+// <Loader/>, which can get visually lost behind overflow-hidden / blur /
+// transform ancestors elsewhere on the page. useProgress reports 0-100 for
+// whatever's loading inside the nearest Suspense boundary — here, the HDR
+// environment file and any cake model assets.
+// ---------------------------------------------------------------------------
+function SceneLoadingOverlay() {
+  const { active, progress } = useProgress();
+
+  if (!active) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/10">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C9A24B] border-t-transparent" />
+        <span className="text-xs tracking-wide text-[#C9A24B]">
+          {Math.round(progress)}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Camera framing from the REAL canvas size.
 //
 // This replaces framing based on window.innerWidth/innerHeight, which was
@@ -323,6 +348,7 @@ export default function SceneCanvas({
         <SceneViewportContext.Provider value={{ breakpoint, aspect }}>
           <Canvas
             shadows
+            frameloop="demand"
             dpr={dprRange}
             camera={cameraSettings}
             gl={{
@@ -347,6 +373,7 @@ export default function SceneCanvas({
             />
             <BloomLayer breakpoint={breakpoint} />
           </Canvas>
+          <SceneLoadingOverlay />
         </SceneViewportContext.Provider>
       </WebGLErrorBoundary>
     </div>
