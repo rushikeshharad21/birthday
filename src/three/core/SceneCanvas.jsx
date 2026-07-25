@@ -337,7 +337,7 @@ export default function SceneCanvas({
           >
             <Suspense fallback={null}>
               <SceneLighting shadowExtent={shadowExtent} />
-              <Environment preset="studio" />
+              <Environment files="/env/studio_small.hdr" />
               {children}
             </Suspense>
             <CameraRig

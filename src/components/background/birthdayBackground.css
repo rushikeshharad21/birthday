@@ -65,6 +65,15 @@
     filter:blur(10px);
 
     animation:drift 25s ease-in-out infinite;
+
+    /* GPU-layer promotion: these are large (550-850px) blurred elements
+       animating forever for as long as the page is open. will-change +
+       a translateZ(0) hint tells the browser to keep this on its own
+       compositor layer rather than re-rasterizing the blur on every
+       frame's paint, which matters a lot under Lighthouse's throttled
+       CPU simulation. */
+    will-change:transform;
+    transform:translateZ(0);
 }
 
 .rose{
@@ -129,6 +138,8 @@
     background:#c9a96e;
 
     animation:float linear infinite;
+
+    will-change:transform, opacity;
 }
 
 /* Animations */

@@ -1,34 +1,29 @@
-import { useLayoutEffect, useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { useRef } from "react";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useReducedMotion,
+} from "framer-motion";
 
 /**
  * Premium Gallery Card — 3D depth via two independent mechanisms so
  * neither fights the other over the same transform property:
  *
- * 1. SCROLL ENTRANCE (all devices, including mobile where hover doesn't
- *    exist): driven by GSAP ScrollTrigger with `scrub`, not a fixed-time
- *    animation. The card's slide/rotate/fade progress is tied DIRECTLY to
- *    scroll position within a window (roughly: from when the card's top
- *    enters the bottom of the viewport, to when it nears center) — so it
- *    genuinely moves as the person scrolls and pauses when they pause,
- *    rather than firing once on a timer. Each card has its own
- *    ScrollTrigger tied to its own position on the page, so cards further
- *    down the grid naturally reveal later as you keep scrolling — no
- *    artificial per-card delay needed for that "one by one" cascade
- *    anymore, it falls out of scrub + each card's real position.
+ * 1. SCROLL ENTRANCE: alternating left/right slide-in with a subtle
+ *    rotateY turn, driven by Framer Motion's `whileInView` — deliberately
+ *    NOT GSAP/ScrollTrigger. Framer Motion is already a dependency for
+ *    the rest of the site (Hero, Reveal, etc.), so using it here adds
+ *    zero new bundle weight to this early-loading section, unlike GSAP
+ *    which was landing in the critical render path (see perf notes).
  *
- * 2. POINTER TILT (desktop hover): unchanged from before — a separate
- *    inner <motion.div> tracks the cursor and tilts via spring-smoothed
- *    Framer Motion values. Kept on its own DOM node, deliberately never
- *    touching the same element GSAP animates, so the two systems don't
- *    fight over the same transform.
+ * 2. POINTER TILT (desktop hover): a separate inner <motion.div> tracks
+ *    the cursor and tilts via spring-smoothed motion values in `style`.
+ *    Kept on its own DOM node so it never competes with the entrance
+ *    animation over the same transform property.
  *
- * Respects prefers-reduced-motion: the GSAP entrance is skipped entirely
- * (card just renders at rest) and the pointer tilt is disabled.
+ * Respects prefers-reduced-motion: both collapse to a simple fade.
  */
 
 const MAX_TILT_DEG = 8; // kept modest — reads as "premium subtle depth," not a gimmick
@@ -36,49 +31,40 @@ const IMAGE_PARALLAX_PX = 14; // how far the image shifts opposite the tilt, rei
 const SLIDE_DISTANCE_PX = 90; // how far off-screen (left/right) each card starts before sliding in
 const ENTRANCE_TILT_DEG = 14; // subtle rotateY turn matching the slide direction, for a 3D "swinging in" feel rather than a flat slide
 
-export default function GalleryCard({ photo, index = 0 }) {
-  const { image, alt } = photo;
-  const articleRef = useRef(null);
-  const tiltRef = useRef(null);
-  const shouldReduceMotion = useReducedMotion();
-  const direction = index % 2 === 0 ? -1 : 1; // even -> from left, odd -> from right
-
-  useLayoutEffect(() => {
-    const element = articleRef.current;
-    if (!element) return undefined;
-
-    if (shouldReduceMotion) {
-      gsap.set(element, { opacity: 1, x: 0, rotateY: 0, scale: 1 });
-      return undefined;
-    }
-
-    gsap.set(element, {
+/**
+ * `direction`: -1 = enters from the left, 1 = enters from the right.
+ * Alternating by index (even -> left, odd -> right) produces the
+ * "some from left, some from right" cascade down the grid.
+ */
+function entranceVariants(reduced, direction) {
+  if (reduced) {
+    return {
+      hidden: { opacity: 0 },
+      visible: { opacity: 1, transition: { duration: 0.5 } },
+    };
+  }
+  return {
+    hidden: {
       opacity: 0,
       x: direction * SLIDE_DISTANCE_PX,
       rotateY: direction * -ENTRANCE_TILT_DEG,
       scale: 0.94,
-      transformPerspective: 1200,
-    });
-
-    const tween = gsap.to(element, {
+    },
+    visible: {
       opacity: 1,
       x: 0,
       rotateY: 0,
       scale: 1,
-      ease: "none", // scrub drives the timing directly from scroll position — an eased curve here would fight scrub's own linear-to-scroll mapping
-      scrollTrigger: {
-        trigger: element,
-        start: "top 90%", // begins as soon as the card's top edge enters the bottom ~10% of the viewport
-        end: "top 55%", // finishes once the card's top edge nears vertical center — a fairly short window so it doesn't feel sluggish
-        scrub: 0.6, // slight smoothing lag (in seconds) rather than raw 1:1 pixel binding, so it still feels fluid rather than mechanically stepped
-      },
-    });
+      transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
+}
 
-    return () => {
-      tween.scrollTrigger?.kill();
-      tween.kill();
-    };
-  }, [direction, shouldReduceMotion]);
+export default function GalleryCard({ photo, index = 0 }) {
+  const { image, alt } = photo;
+  const tiltRef = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
+  const direction = index % 2 === 0 ? -1 : 1; // even -> from left, odd -> from right
 
   // Raw pointer position within the tilt layer, normalized to -0.5..0.5.
   const pointerX = useMotionValue(0);
@@ -102,8 +88,6 @@ export default function GalleryCard({ photo, index = 0 }) {
     springConfig
   );
 
-  // A soft highlight that follows the pointer — reinforces the tilt as a
-  // glossy 3D surface catching light, not just a flat card rotating.
   const glowX = useTransform(pointerX, [-0.5, 0.5], ["15%", "85%"]);
   const glowY = useTransform(pointerY, [-0.5, 0.5], ["15%", "85%"]);
   const glowBackground = useTransform(
@@ -125,8 +109,12 @@ export default function GalleryCard({ photo, index = 0 }) {
   }
 
   return (
-    <article
-      ref={articleRef}
+    <motion.article
+      variants={entranceVariants(shouldReduceMotion, direction)}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.35 }}
+      style={{ transformPerspective: 1200 }}
       className="
         group
         relative
@@ -166,7 +154,7 @@ export default function GalleryCard({ photo, index = 0 }) {
       />
 
       {/* Tilt layer — pointer-driven 3D rotation, deliberately separate
-          from the GSAP-driven entrance on the outer <article>. */}
+          from the entrance animation on the outer <motion.article>. */}
       <motion.div
         ref={tiltRef}
         onMouseMove={handlePointerMove}
@@ -257,6 +245,6 @@ export default function GalleryCard({ photo, index = 0 }) {
           />
         </motion.div>
       </motion.div>
-    </article>
+    </motion.article>
   );
 }

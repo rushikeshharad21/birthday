@@ -328,17 +328,7 @@ const BirthdayCard = () => {
   const sparkles = useMemo(() => makeSparkles(7), []);
   const burstParts = useMemo(() => makeBurst(22), []);
   /* ── load Google Fonts ──────────────────────────────────────── */
-  useEffect(() => {
-    const href =
-      "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap";
-    if (!document.querySelector(`link[href="${href}"]`)) {
-      const link = Object.assign(document.createElement("link"), {
-        rel: "stylesheet",
-        href,
-      });
-      document.head.appendChild(link);
-    }
-  }, []);
+  
   /* ── reduced-motion listener ────────────────────────────────── */
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
