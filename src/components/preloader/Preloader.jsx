@@ -1,15 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Preloader
  * ──────────────────────────────────────────────────────────────────────
  * A brief countdown (3 → 2 → 1) shown before the site itself appears.
- * Visually matches the dark cinematic opening of the Hero section — a
- * deep charcoal-black stage, a single slow-breathing gold ring, and
- * large serif numerals — so it reads as the first frame of the
- * experience rather than a generic spinner bolted on top of it.
  *
- * Usage (in App.jsx):
+ * MOBILE-CENTERING FIX: previously this rendered inline in the normal
+ * React tree. `position: fixed` is only reliable if NO ancestor has a
+ * `transform`, `filter`, `perspective`, `will-change: transform`, or
+ * `backdrop-filter` set — any of those creates a new containing block
+ * and silently breaks fixed positioning, which is a very common cause
+ * of "centered on desktop, off on mobile" bugs in animated layouts.
+ * Rendering through a portal into document.body sidesteps this
+ * entirely, regardless of what the rest of the app's ancestor tree
+ * does.
+ *
+ * Usage (in App.jsx) — unchanged:
  *
  *   const [ready, setReady] = useState(false);
  *   return (
@@ -20,9 +27,6 @@ import React, { useEffect, useRef, useState } from "react";
  *       </div>
  *     </>
  *   );
- *
- * `onComplete` fires once the countdown and its exit fade have both
- * finished, so the caller can safely reveal / mount the real page.
  */
 
 const COUNT_START = 3;
@@ -59,8 +63,9 @@ export default function Preloader({ onComplete }) {
   }, [count, reducedMotion, onComplete]);
 
   if (!mounted) return null;
+  if (typeof document === "undefined") return null; // SSR guard
 
-  return (
+  const node = (
     <div
       role="status"
       aria-live="polite"
@@ -81,8 +86,6 @@ export default function Preloader({ onComplete }) {
             aria-hidden="true"
           >
             <defs>
-              {/* Blue → violet → purple sweep, with a soft outer glow so
-                  the ring reads as luminous rather than flat-colored. */}
               <linearGradient
                 id="pl-ring-gradient"
                 x1="0%"
@@ -103,7 +106,6 @@ export default function Preloader({ onComplete }) {
               </filter>
             </defs>
 
-            {/* faint track */}
             <circle
               cx={RING_SIZE / 2}
               cy={RING_SIZE / 2}
@@ -112,8 +114,6 @@ export default function Preloader({ onComplete }) {
               stroke="rgba(139,92,246,0.16)"
               strokeWidth={RING_STROKE}
             />
-            {/* active sweep — one per remaining second, redraws key so the
-                CSS animation restarts cleanly on every count change */}
             <circle
               key={count}
               className={reducedMotion ? "" : "pl-ring__sweep"}
@@ -140,6 +140,8 @@ export default function Preloader({ onComplete }) {
       </div>
     </div>
   );
+
+  return createPortal(node, document.body);
 }
 
 function useReducedMotionFlag() {
@@ -155,10 +157,19 @@ const PRELOADER_STYLES = `
 .pl-stage{
   position:fixed;
   inset:0;
+  /* inset:0 already anchors to the live viewport, which handles the
+     mobile address-bar resize case better than a static height. But
+     we back it up with dvh so the box has an explicit size even if
+     something upstream overrides top/right/bottom/left. */
+  width:100vw;
+  height:100dvh;
   z-index:9999;
   display:flex;
   align-items:center;
   justify-content:center;
+  overflow:hidden;
+  box-sizing:border-box;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   background:radial-gradient(ellipse at center, #171227 0%, #07050d 100%);
   opacity:1;
   transition:opacity ${EXIT_FADE_MS}ms cubic-bezier(.25,.46,.45,.94);
@@ -167,36 +178,45 @@ const PRELOADER_STYLES = `
   opacity:0;
   pointer-events:none;
 }
+.pl-stage *{
+  box-sizing:border-box;
+}
 
 .pl-center{
   display:flex;
   flex-direction:column;
   align-items:center;
   gap:1.75rem;
+  max-width:100%;
+  padding:0 1.25rem;
 }
 
 .pl-eyebrow{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:.7rem;
+  font-size:clamp(.62rem, 2.6vw, .7rem);
   font-weight:500;
   letter-spacing:.35em;
   text-transform:uppercase;
   color:#a78bfa;
   opacity:.9;
+  white-space:nowrap;
 }
 
 .pl-ring-wrap{
   position:relative;
-  width:${RING_SIZE}px;
-  height:${RING_SIZE}px;
+  width:clamp(120px, 38vw, ${RING_SIZE}px);
+  height:clamp(120px, 38vw, ${RING_SIZE}px);
   display:flex;
   align-items:center;
   justify-content:center;
+  flex-shrink:0;
 }
 
 .pl-ring{
   position:absolute;
   inset:0;
+  width:100%;
+  height:100%;
 }
 
 .pl-ring__sweep{
@@ -209,7 +229,7 @@ const PRELOADER_STYLES = `
 
 .pl-digit{
   font-family:Georgia,'Playfair Display',serif;
-  font-size:3.75rem;
+  font-size:clamp(2.75rem, 10vw, 3.75rem);
   font-weight:500;
   line-height:1;
   background:linear-gradient(135deg, #93c5fd 0%, #a78bfa 50%, #e879f9 100%);
@@ -227,10 +247,11 @@ const PRELOADER_STYLES = `
 
 .pl-caption{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:.8rem;
+  font-size:clamp(.72rem, 3vw, .8rem);
   font-weight:300;
   letter-spacing:.04em;
   color:#a99bc9;
+  text-align:center;
 }
 
 @media (prefers-reduced-motion: reduce){
