@@ -1,7 +1,7 @@
 export const memories = [
   {
     id: "wish-1",
-    image: "/images/memories/photo-1.jpg",
+    image: "/images/memories/photo-1.webp",
     alt: "My lovely sister smiling",
     title: "My Dear Sister",
     description:
@@ -9,7 +9,7 @@ export const memories = [
   },
   {
     id: "wish-2",
-    image: "/images/memories/photo-2.jpg",
+    image: "/images/memories/photo-2.webp",
     alt: "Birthday celebration",
     title: "Happy Birthday",
     description:
@@ -17,7 +17,7 @@ export const memories = [
   },
   {
     id: "wish-3",
-    image: "/images/memories/photo-3.jpg",
+    image: "/images/memories/photo-3.webp",
     alt: "Beautiful sister portrait",
     title: "Keep Smiling Always",
     description:
@@ -25,7 +25,7 @@ export const memories = [
   },
   {
     id: "wish-4",
-    image: "/images/memories/photo-4.jpg",
+    image: "/images/memories/photo-4.webp",
     alt: "Special family moment",
     title: "May Every Dream Come True",
     description:
@@ -33,7 +33,7 @@ export const memories = [
   },
   {
     id: "wish-5",
-    image: "/images/memories/photo-5.jpg",
+    image: "/images/memories/photo-5.webp",
     alt: "Together forever",
     title: "Forever My Sister",
     description:
