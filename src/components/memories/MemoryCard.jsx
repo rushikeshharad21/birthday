@@ -7,6 +7,13 @@ import { fadeUp, scaleIn } from "../../animations/heroVariants";
  *
  * Premium Apple × Stripe inspired card
  * Logic unchanged — only UI upgraded.
+ *
+ * Perf note: backdrop-blur is one of the most expensive operations for
+ * mobile GPUs, especially with continuously-animating background layers
+ * behind it (BirthdayBackground's orbs/particles). Mobile gets a lighter
+ * blur + a more opaque background (so the glass look still reads), and
+ * the full 2xl blur only kicks in at md: and above, where desktop GPUs
+ * handle it without contributing to scroll jank.
  */
 
 export default function MemoryCard({ memory, reverse = false }) {
@@ -33,8 +40,10 @@ export default function MemoryCard({ memory, reverse = false }) {
           border
           border-[#E6D8C9]
 
-          bg-white/55
-          backdrop-blur-2xl
+          bg-white/70
+          backdrop-blur-md
+          md:bg-white/55
+          md:backdrop-blur-2xl
 
           p-6
           sm:p-8
@@ -149,8 +158,10 @@ export default function MemoryCard({ memory, reverse = false }) {
                 border
                 border-[#DCC9B4]
 
-                bg-white/60
-                backdrop-blur-xl
+                bg-white/80
+                backdrop-blur-sm
+                md:bg-white/60
+                md:backdrop-blur-xl
 
                 px-4
                 py-1.5

@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -75,12 +74,19 @@ const STYLES = `
   position:relative;z-index:1;perspective:1200px;
   width:100%;max-width:520px;
 }
+/* Mobile-first: a much lighter blur here. backdrop-filter is one of the
+   most expensive operations for mobile GPUs, and this card sits above
+   BirthdayBackground's continuously-animating orbs/particles — every
+   frame the browser had to re-sample all of that through a 40px blur.
+   A lighter blur + a more opaque background still reads as "glass" on
+   small screens without the per-frame cost. Full strength returns at
+   768px and up, see the media query near the bottom of this block. */
 .bc-card{
   position:relative;
   padding:3.5rem 3rem;
-  background:rgba(255,252,248,.72);
-  backdrop-filter:blur(40px) saturate(1.2);
-  -webkit-backdrop-filter:blur(40px) saturate(1.2);
+  background:rgba(255,252,248,.85);
+  backdrop-filter:blur(12px) saturate(1.1);
+  -webkit-backdrop-filter:blur(12px) saturate(1.1);
   border-radius:24px;
   border:1px solid rgba(255,255,255,.55);
   box-shadow:
@@ -231,6 +237,15 @@ const STYLES = `
   .bc-card{padding:2rem 1.25rem;border-radius:16px}
   .bc-cta{padding:.75rem 1.6rem;font-size:.72rem}
 }
+/* Tablet and up: restore the full-strength blur — desktop/tablet GPUs
+   handle this without contributing to scroll jank the way mobile does. */
+@media(min-width:768px){
+  .bc-card{
+    background:rgba(255,252,248,.72);
+    backdrop-filter:blur(40px) saturate(1.2);
+    -webkit-backdrop-filter:blur(40px) saturate(1.2);
+  }
+}
 @media(min-width:1200px){
   .bc-wrap{max-width:560px}
   .bc-card{padding:4rem 3.5rem}
@@ -327,8 +342,6 @@ const BirthdayCard = () => {
   const particles = useMemo(() => makeParticles(28), []);
   const sparkles = useMemo(() => makeSparkles(7), []);
   const burstParts = useMemo(() => makeBurst(22), []);
-  /* ── load Google Fonts ──────────────────────────────────────── */
-  
   /* ── reduced-motion listener ────────────────────────────────── */
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");

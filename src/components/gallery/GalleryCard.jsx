@@ -21,9 +21,17 @@ import {
  * 2. POINTER TILT (desktop hover): a separate inner <motion.div> tracks
  *    the cursor and tilts via spring-smoothed motion values in `style`.
  *    Kept on its own DOM node so it never competes with the entrance
- *    animation over the same transform property.
+ *    animation over the same transform property. This only ever
+ *    activates from mouse movement, so it's already a no-op on
+ *    touch-only mobile devices.
  *
  * Respects prefers-reduced-motion: both collapse to a simple fade.
+ *
+ * Perf note: backdrop-blur is one of the most expensive operations for
+ * mobile GPUs, especially with continuously-animating background layers
+ * behind it (BirthdayBackground's orbs/particles). Mobile gets a lighter
+ * blur + a more opaque background (so the glass look still reads), and
+ * the full xl blur only kicks in at md: and above.
  */
 
 const MAX_TILT_DEG = 8; // kept modest — reads as "premium subtle depth," not a gimmick
@@ -121,8 +129,10 @@ export default function GalleryCard({ photo, index = 0 }) {
         overflow-hidden
         rounded-[30px]
 
-        bg-white/20
-        backdrop-blur-xl
+        bg-white/40
+        backdrop-blur-md
+        md:bg-white/20
+        md:backdrop-blur-xl
 
         border
         border-white/40
