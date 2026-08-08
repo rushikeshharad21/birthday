@@ -188,3 +188,45 @@
     }
 
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   Performance: reduce the number of continuously-animating background
+   layers. Cards elsewhere on the site (MemoryCard, Letter, FinalWish)
+   use backdrop-blur, which forces the browser to re-sample whatever is
+   behind them on every frame. With 3 large orbs + 30 particles all
+   animating forever, that re-sample cost compounds on every scroll
+   frame — this is what was causing the jank, not the scroll library
+   itself. Mobile GPUs feel this far more than desktop, so mobile gets
+   the most aggressive cut; desktop keeps the fuller effect but still
+   trims particle count since 30 was excessive for what's a subtle
+   ambient effect.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Desktop / tablet: keep the effect, but a lighter particle count.
+   nth-child selectors are cheap and require no JS/prop changes. */
+.bg-particle:nth-child(n + 19) {
+    display: none; /* keep first 18 of 30 */
+}
+
+/* Mobile: orbs stop animating (stay visible, just static — a static
+   blurred glow costs the compositor nothing extra per frame, an
+   animating one costs a full recomposite every frame), and particle
+   count drops further. */
+@media (max-width: 768px) {
+    .bg-orb {
+        animation: none;
+    }
+
+    .bg-particle:nth-child(n + 11) {
+        display: none; /* keep first 10 of 30 on mobile */
+    }
+}
+
+/* Reduced motion: respect the OS-level setting site-wide, same as the
+   rest of the project already does elsewhere. */
+@media (prefers-reduced-motion: reduce) {
+    .bg-orb,
+    .bg-particle {
+        animation: none !important;
+    }
+}
